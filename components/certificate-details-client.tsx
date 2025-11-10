@@ -463,9 +463,8 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
           <h3 className="text-lg font-bold text-[#F3F7FA] sm:text-xl md:text-2xl">What this holder achieved</h3>
         </div>
 
-        <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
+        <div className="space-y-2 text-[#F3F7FA]/90 sm:space-y-3">
           <ReactMarkdown
-            className="space-y-2 text-[#F3F7FA]/90 sm:space-y-3"
             components={{
               ul: ({ children }) => (
                 <ul className="space-y-1.5 pl-4 text-background sm:space-y-2 sm:pl-5">{children}</ul>
