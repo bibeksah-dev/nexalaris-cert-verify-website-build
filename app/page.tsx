@@ -12,13 +12,27 @@ import { AnimatedBackground } from "@/components/animated-background"
 
 export default function HomePage() {
   const [certCode, setCertCode] = useState("")
+  const [error, setError] = useState("")
   const router = useRouter()
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault()
-    if (certCode.trim()) {
-      router.push(`/c/${certCode.trim()}`)
+    setError("")
+
+    const trimmedCode = certCode.trim()
+    const certPattern = /^VC-\d{4}-[A-Za-z0-9]+$/
+
+    if (!trimmedCode) {
+      setError("Please enter a certificate ID")
+      return
     }
+
+    if (!certPattern.test(trimmedCode)) {
+      setError("Invalid certificate ID format. Expected format: VC-YYYY-XXXX (e.g., VC-2024-ABC123)")
+      return
+    }
+
+    router.push(`/c/${trimmedCode}`)
   }
 
   return (
@@ -57,11 +71,15 @@ export default function HomePage() {
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder="Enter Certificate ID"
+                    placeholder="Enter Certificate ID (e.g., VC-2024-ABC123)"
                     value={certCode}
-                    onChange={(e) => setCertCode(e.target.value)}
+                    onChange={(e) => {
+                      setCertCode(e.target.value)
+                      setError("")
+                    }}
                     className="h-12 rounded-xl border-white/20 bg-white/10 px-4 text-base text-[#F3F7FA] placeholder:text-[#F3F7FA]/40 focus:border-[#12E8D5] focus:ring-[#12E8D5] sm:h-14 sm:px-6 sm:text-lg"
                   />
+                  {error && <p className="mt-2 text-left text-sm text-red-400">{error}</p>}
                 </div>
 
                 <Button
