@@ -155,10 +155,10 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
       </div>
 
       <AlertDialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
-        <AlertDialogContent className="border-white/10 bg-[#0B0C10]">
+        <AlertDialogContent className="border-white/10 bg-[#0B0C10]" aria-describedby="revoke-dialog-description">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-[#F3F7FA]">Revoke Certificate</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#F3F7FA]/70">
+            <AlertDialogDescription id="revoke-dialog-description" className="text-[#F3F7FA]/70">
               Are you sure you want to revoke this certificate? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

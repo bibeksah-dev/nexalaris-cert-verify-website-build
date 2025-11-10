@@ -60,21 +60,21 @@ export default async function CertificateDetailsPage({
       <div className="relative z-10 flex min-h-screen flex-col">
         {/* Header */}
         <header className="border-b border-white/10 backdrop-blur-sm">
-          <div className="container mx-auto flex items-center justify-between px-4 py-6">
+          <div className="container mx-auto flex items-center justify-between px-4 py-4 sm:px-6 sm:py-6">
             <Link href="/">
               <Image
                 src="/images/design-mode/NexalarisFullLogo.webp"
                 alt="Nexalaris Logo"
                 width={200}
                 height={50}
-                className="h-12 w-auto"
+                className="h-10 w-auto sm:h-12"
               />
             </Link>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto flex-1 px-4 py-12">
+        <main className="container mx-auto flex-1 px-4 py-6 sm:px-6 sm:py-8 md:py-12">
           <CertificateDetailsClient
             certificate={{
               ...certificate,
@@ -86,8 +86,8 @@ export default async function CertificateDetailsPage({
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 py-6 text-center backdrop-blur-sm">
-          <p className="text-sm text-[#F3F7FA]/50">© Nexalaris Tech Private Limited</p>
+        <footer className="border-t border-white/10 py-4 text-center backdrop-blur-sm sm:py-6">
+          <p className="px-4 text-xs text-[#F3F7FA]/50 sm:text-sm">© Nexalaris Tech Private Limited</p>
         </footer>
       </div>
     </div>

@@ -346,85 +346,93 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-6 sm:space-y-8">
       {/* Status Banner */}
-      <div className={`rounded-2xl border ${config.border} bg-white/5 p-6 backdrop-blur-xl`}>
-        <div className="flex items-center gap-4">
-          <div className={`rounded-full ${config.color} p-3`}>
-            <StatusIcon className="h-8 w-8 text-[#0B0C10]" />
+      <div className={`rounded-xl border ${config.border} bg-white/5 p-4 backdrop-blur-xl sm:rounded-2xl sm:p-6`}>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className={`rounded-full ${config.color} p-2 sm:p-3`}>
+            <StatusIcon className="h-6 w-6 text-[#0B0C10] sm:h-8 sm:w-8" />
           </div>
-          <div>
-            <h2 className={`text-2xl font-bold ${config.text}`}>{config.label}</h2>
-            <p className="text-[#F3F7FA]/70">Certificate ID: {certificate.cert_code}</p>
+          <div className="min-w-0 flex-1">
+            <h2 className={`text-xl font-bold ${config.text} sm:text-2xl`}>{config.label}</h2>
+            <p className="truncate text-sm text-[#F3F7FA]/70 sm:text-base">Certificate ID: {certificate.cert_code}</p>
           </div>
         </div>
       </div>
 
       {/* Revoked Warning */}
       {certificate.status === "REVOKED" && (
-        <div className="rounded-2xl border border-[#FF4B4B]/30 bg-[#FF4B4B]/10 p-4 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-[#FF4B4B]" />
-            <p className="text-sm text-[#F3F7FA]">This certificate has been revoked and cannot be downloaded.</p>
+        <div className="rounded-xl border border-[#FF4B4B]/30 bg-[#FF4B4B]/10 p-3 backdrop-blur-xl sm:rounded-2xl sm:p-4">
+          <div className="flex items-start gap-2 sm:items-center sm:gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#FF4B4B] sm:mt-0" />
+            <p className="text-sm text-[#F3F7FA] sm:text-base">
+              This certificate has been revoked and cannot be downloaded.
+            </p>
           </div>
         </div>
       )}
 
       {/* Certificate Details */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-        <div className="grid gap-8 lg:grid-cols-3">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:rounded-2xl sm:p-6 md:p-8">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
           {/* Left: QR Code */}
-          <div className="flex flex-col items-center justify-center rounded-xl border border-[#12E8D5]/30 bg-white/5 p-6">
-            {qrDataUrl && <img src={qrDataUrl || "/placeholder.svg"} alt="QR Code" className="h-48 w-48 rounded-lg" />}
-            <p className="mt-4 text-center text-sm text-[#F3F7FA]/70">Scan to verify</p>
+          <div className="flex flex-col items-center justify-center rounded-lg border border-[#12E8D5]/30 bg-white/5 p-4 sm:rounded-xl sm:p-6">
+            {qrDataUrl && (
+              <img
+                src={qrDataUrl || "/placeholder.svg"}
+                alt="QR Code"
+                className="h-32 w-32 rounded-lg sm:h-40 sm:w-40 md:h-48 md:w-48"
+              />
+            )}
+            <p className="mt-3 text-center text-xs text-[#F3F7FA]/70 sm:mt-4 sm:text-sm">Scan to verify</p>
           </div>
 
           {/* Right: Details */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-4 sm:space-y-6 lg:col-span-2">
             <div>
-              <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Certificate Holder</h3>
-              <p className="text-2xl font-bold text-[#F3F7FA]">{certificate.holder_name}</p>
+              <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Certificate Holder</h3>
+              <p className="text-xl font-bold text-[#F3F7FA] sm:text-2xl">{certificate.holder_name}</p>
             </div>
 
             <div>
-              <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Program</h3>
-              <p className="text-xl font-semibold text-[#12E8D5]">{certificate.programName}</p>
+              <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Program</h3>
+              <p className="text-lg font-semibold text-[#12E8D5] sm:text-xl">{certificate.programName}</p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
-                <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Issued At</h3>
-                <p className="text-[#F3F7FA]">{formatDate(certificate.issued_at)}</p>
+                <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Issued At</h3>
+                <p className="text-sm text-[#F3F7FA] sm:text-base">{formatDate(certificate.issued_at)}</p>
               </div>
 
               {certificate.expires_at && (
                 <div>
-                  <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Expires At</h3>
-                  <p className="text-[#F3F7FA]">{formatDate(certificate.expires_at)}</p>
+                  <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Expires At</h3>
+                  <p className="text-sm text-[#F3F7FA] sm:text-base">{formatDate(certificate.expires_at)}</p>
                 </div>
               )}
             </div>
 
             <div>
-              <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Issuer</h3>
-              <p className="text-[#F3F7FA]">Nexalaris Tech Private Limited</p>
+              <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Issuer</h3>
+              <p className="text-sm text-[#F3F7FA] sm:text-base">Nexalaris Tech Private Limited</p>
             </div>
 
             {certificate.signature_hash && (
               <div>
-                <h3 className="mb-2 text-sm font-medium text-[#F3F7FA]/70">Signature Hash</h3>
-                <p className="break-all font-mono text-sm text-[#F3F7FA]/70">{certificate.signature_hash}</p>
+                <h3 className="mb-1 text-xs font-medium text-[#F3F7FA]/70 sm:mb-2 sm:text-sm">Signature Hash</h3>
+                <p className="break-all font-mono text-xs text-[#F3F7FA]/70 sm:text-sm">{certificate.signature_hash}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-3">
           <Button
             onClick={() => handleDownload("pdf")}
             disabled={downloading !== null || certificate.status === "REVOKED"}
-            className="rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-[#0B0C10] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+            className="h-11 w-full rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-sm text-[#0B0C10] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 sm:h-auto sm:w-auto sm:text-base"
           >
             <Download className="mr-2 h-4 w-4" />
             {downloading === "pdf" ? "Generating PDF..." : "Download PDF"}
@@ -432,7 +440,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
           <Button
             onClick={() => handleDownload("png")}
             disabled={downloading !== null || certificate.status === "REVOKED"}
-            className="rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-[#0B0C10] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+            className="h-11 w-full rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-sm text-[#0B0C10] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 sm:h-auto sm:w-auto sm:text-base"
           >
             <Download className="mr-2 h-4 w-4" />
             {downloading === "png" ? "Generating PNG..." : "Download PNG"}
@@ -440,7 +448,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
           <Button
             onClick={copyLink}
             variant="outline"
-            className="rounded-xl border-white/20 bg-white/5 text-[#F3F7FA] hover:bg-white/10"
+            className="h-11 w-full rounded-xl border-white/20 bg-white/5 text-sm text-[#F3F7FA] hover:bg-white/10 sm:h-auto sm:w-auto sm:text-base"
           >
             <Copy className="mr-2 h-4 w-4" />
             Copy Link
@@ -449,18 +457,22 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       </div>
 
       {/* Achievements Section */}
-      <div className="rounded-2xl border border-[#8E2DE2]/30 bg-white/5 p-8 backdrop-blur-xl">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-1 w-12 rounded-full bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2]" />
-          <h3 className="text-2xl font-bold text-[#F3F7FA]">What this holder achieved</h3>
+      <div className="rounded-xl border border-[#8E2DE2]/30 bg-white/5 p-4 backdrop-blur-xl sm:rounded-2xl sm:p-6 md:p-8">
+        <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+          <div className="h-1 w-8 rounded-full bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] sm:w-12" />
+          <h3 className="text-lg font-bold text-[#F3F7FA] sm:text-xl md:text-2xl">What this holder achieved</h3>
         </div>
 
-        <div className="prose prose-invert max-w-none">
+        <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
           <ReactMarkdown
-            className="space-y-3 text-[#F3F7FA]/90"
+            className="space-y-2 text-[#F3F7FA]/90 sm:space-y-3"
             components={{
-              ul: ({ children }) => <ul className="space-y-2 pl-5 text-background">{children}</ul>,
-              li: ({ children }) => <li className="leading-relaxed marker:text-[#12E8D5]">{children}</li>,
+              ul: ({ children }) => (
+                <ul className="space-y-1.5 pl-4 text-background sm:space-y-2 sm:pl-5">{children}</ul>
+              ),
+              li: ({ children }) => (
+                <li className="text-sm leading-relaxed marker:text-[#12E8D5] sm:text-base">{children}</li>
+              ),
             }}
           >
             {certificate.achievements_markdown}

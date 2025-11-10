@@ -29,20 +29,23 @@ export default function AdminLoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
+        credentials: "include",
       })
 
       const data = await response.json()
 
-      if (response.ok) {
-        const redirect = searchParams.get("redirect") || "/admin/dashboard"
-        router.push(redirect)
-      } else {
-        toast({
-          title: "Login failed",
-          description: data.error || "Invalid password",
-          variant: "destructive",
-        })
+      if (response.ok && data.success) {
+        setTimeout(() => {
+          window.location.href = data.redirect
+        }, 100)
+        return
       }
+
+      toast({
+        title: "Login failed",
+        description: data.error || "Invalid password",
+        variant: "destructive",
+      })
     } catch (error) {
       toast({
         title: "Error",
