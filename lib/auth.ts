@@ -33,22 +33,40 @@ export async function clearAdminSession() {
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const supabase = await getSupabaseServerClient()
 
+  console.log("[v0] Fetching admin auth from database...")
+
   // Get the admin password hash
   const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").single()
 
   if (error || !adminAuth) {
+    console.log("[v0] No admin auth found, creating default...")
     // If no admin auth exists, create default
     const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || "changeMeNow!"
+    console.log(
+      "[v0] Default password set to:",
+      defaultPassword === "changeMeNow!" ? "changeMeNow!" : "custom from env",
+    )
     const hash = await bcrypt.hash(defaultPassword, 10)
 
-    await supabase.from("admin_auth").insert({ password_hash: hash })
+    const { error: insertError } = await supabase.from("admin_auth").insert({ password_hash: hash })
+
+    if (insertError) {
+      console.error("[v0] Failed to create default admin auth:", insertError)
+    } else {
+      console.log("[v0] Default admin auth created successfully")
+    }
 
     // Check if provided password matches default
-    return password === defaultPassword
+    const matches = password === defaultPassword
+    console.log("[v0] Password matches default:", matches)
+    return matches
   }
 
+  console.log("[v0] Admin auth found, comparing password...")
   // Verify password
-  return bcrypt.compare(password, adminAuth.password_hash)
+  const result = await bcrypt.compare(password, adminAuth.password_hash)
+  console.log("[v0] Password comparison result:", result)
+  return result
 }
 
 export async function changeAdminPassword(
