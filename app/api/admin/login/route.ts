@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
     // Create server-side session (sets cookies via cookieStore)
     await setAdminSession()
 
-    return NextResponse.json({ success: true })
+    // Always send a redirect target the client expects
+    return NextResponse.json({ success: true, redirect: "/admin/dashboard" })
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

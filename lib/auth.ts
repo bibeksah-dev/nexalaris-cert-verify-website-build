@@ -17,7 +17,7 @@ export async function getAdminSessionToken(): Promise<string | undefined> {
 // Create a server-side session record and set cookies (session token + csrf token)
 export async function setAdminSession() {
   const cookieStore = await cookies()
-  const supabase = await getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
 
   const token = crypto.randomBytes(32).toString("hex")
   const csrf = crypto.randomBytes(16).toString("hex")
@@ -53,7 +53,7 @@ export async function clearAdminSession() {
 
   try {
     if (token) {
-      const supabase = await getSupabaseServerClient()
+      const supabase = getSupabaseAdminClient()
       await supabase.from("admin_sessions").delete().eq("token", token)
     }
   } catch (err) {
@@ -91,7 +91,7 @@ export async function changeAdminPassword(
 
   const hash = await bcrypt.hash(newPassword, 10)
 
-  const supabase = await getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { error } = await supabase
     .from("admin_auth")
     .update({ password_hash: hash, updated_at: new Date().toISOString() })
@@ -107,7 +107,7 @@ export async function changeAdminPassword(
 // Validate session token exists server-side and is not expired
 export async function isSessionTokenValid(token?: string) {
   if (!token) return false
-  const supabase = await getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const now = new Date().toISOString()
   const { data } = await supabase.from("admin_sessions").select("token").eq("token", token).gt("expires_at", now).limit(1).single()
   return !!data
