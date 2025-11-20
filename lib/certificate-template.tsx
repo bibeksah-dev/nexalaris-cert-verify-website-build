@@ -3,12 +3,11 @@ export interface CertificateData {
   holder_name: string
   program_name: string
   issued_at: string
-  expires_at: string | null // kept for compatibility; not rendered
+  expires_at: string | null
   signature_hash: string | null
   qr_code_data_url: string
   logo_url: string
 
-  // Optional – for future flexibility
   logo_symbol_url?: string
   signature_image_url?: string
   issuer_name?: string
@@ -26,426 +25,425 @@ export function generateCertificateHTML(data: CertificateData): string {
   const signatureImageUrl = data.signature_image_url || "/signature.png"
 
   return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Nexalaris Tech Certificate</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Nexalaris Certificate</title>
 
-          html, body {
-            width: 1122px;
-            height: 794px;
-          }
-          
-          body {
-            background: radial-gradient(circle at 0% 0%, #111827 0%, #020617 40%, #020617 100%);
-            font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            position: relative;
-            overflow: hidden;
-            color: #F3F7FA;
-          }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-          /* Security background layers */
-          .security-layer {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-          }
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-          /* Guilloche-style pattern */
-          .security-layer::before {
-            content: "";
-            position: absolute;
-            inset: 8%;
-            opacity: 0.10;
-            background-image:
-              radial-gradient(circle at 50% 50%, transparent 0, transparent 30%, rgba(18, 232, 213, 0.5) 31%, transparent 32%),
-              repeating-conic-gradient(
-                from 0deg,
-                rgba(18, 232, 213, 0.16) 0deg 4deg,
-                rgba(142, 45, 226, 0.16) 4deg 8deg
-              );
-            mix-blend-mode: screen;
-            filter: blur(1px);
-          }
+html, body {
+  width: 1122px;
+  height: 794px;
+}
 
-          /* Circuit / polygon network */
-          .security-layer::after {
-            content: "";
-            position: absolute;
-            inset: 10%;
-            opacity: 0.14;
-            background-image:
-              linear-gradient(135deg, rgba(18, 232, 213, 0.4) 1px, transparent 1px),
-              linear-gradient(225deg, rgba(142, 45, 226, 0.4) 1px, transparent 1px);
-            background-size: 70px 70px;
-            mask-image: radial-gradient(circle at 50% 20%, transparent 0, #000 40%, #000 70%, transparent 100%);
-          }
+body {
+  background: radial-gradient(circle at 0% 0%, #0c1524 0%, #020617 45%, #020617 100%);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+  color: #F3F7FA;
+}
 
-          /* Triple border container */
-          .outer-frame {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            padding: 26px;
-            z-index: 1;
-          }
+/* ===== SECURITY LAYERS ===== */
+.security-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
 
-          .border-teal {
-            width: 100%;
-            height: 100%;
-            border-radius: 32px;
-            border: 2px solid #12E8D5;
-            padding: 10px;
-          }
+/* Guilloche pattern */
+.security-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    radial-gradient(circle at 40% 35%, rgba(18, 232, 213, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 65% 65%, rgba(142, 45, 226, 0.20) 0%, transparent 60%);
+  filter: blur(0.8px);
+}
 
-          .border-purple {
-            width: 100%;
-            height: 100%;
-            border-radius: 26px;
-            border: 2px solid #8E2DE2;
-            padding: 10px;
-          }
+/* Grid network pattern */
+.security-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(135deg, rgba(18, 232, 213, 0.28) 1px, transparent 1px),
+    linear-gradient(225deg, rgba(142, 45, 226, 0.28) 1px, transparent 1px);
+  background-size: 70px 70px;
+}
 
-          .border-orange {
-            width: 100%;
-            height: 100%;
-            border-radius: 22px;
-            border: 2px solid #FF8A00;
-            padding: 40px 60px;
-            background: radial-gradient(circle at 20% 0%, rgba(18, 232, 213, 0.15), transparent 60%),
-                        radial-gradient(circle at 80% 100%, rgba(142, 45, 226, 0.22), transparent 60%),
-                        #020617;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-          }
+/* ===== TRIPLE BORDER ===== */
+.outer-frame {
+  width: 100%;
+  height: 100%;
+  padding: 26px;
+  position: relative;
+  z-index: 1;
+}
 
-          /* Watermark logo */
-          .watermark-logo {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 0;
-            pointer-events: none;
-          }
+.border-teal {
+  border-radius: 32px;
+  border: 2px solid #12E8D5;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
 
-          .watermark-logo img {
-            width: 420px;
-            opacity: 0.30;
-            filter: blur(0.3px);
-          }
+.border-purple {
+  border-radius: 28px;
+  border: 2px solid #8E2DE2;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
 
-          /* Layout sections */
-          .header {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-          }
+.border-orange {
+  border-radius: 24px;
+  border: 2px solid #FF8A00;
+  width: 100%;
+  height: 100%;
+  padding: 40px 60px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(18, 232, 213, 0.16), transparent 60%),
+    radial-gradient(circle at 80% 100%, rgba(142, 45, 226, 0.24), transparent 60%),
+    #020617;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-          .logo-full {
-            max-width: 520px;
-            height: auto;
-          }
+/* ===== WATERMARK LOGO B ===== */
+.watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+  pointer-events: none;
+}
 
-          .cert-title {
-            font-size: 24px;
-            font-weight: 600;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, #12E8D5 0%, #8E2DE2 50%, #FF8A00 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          }
+.watermark img {
+  width: 360px;
+  height: auto;
+  opacity: 0.28;
+  filter: blur(0.4px);
+}
 
-          .divider {
-            width: 220px;
-            height: 2px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #12E8D5, #8E2DE2, #FF8A00);
-            margin-top: 4px;
-          }
+/* ===== HEADER ===== */
+.header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
 
-          .content {
-            position: relative;
-            z-index: 1;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 18px;
-          }
+.header-logo {
+  width: 360px;
+  height: auto;
+}
 
-          .eyebrow {
-            font-size: 16px;
-            font-weight: 400;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.64);
-          }
+.title-bar {
+  display: flex;
+  justify-content: center;
+}
 
-          .holder-name {
-            font-size: 58px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            color: #FFFFFF;
-            text-shadow:
-              0 0 16px rgba(18, 232, 213, 0.35),
-              0 0 32px rgba(142, 45, 226, 0.2);
-          }
+.title-bar-inner {
+  padding: 0;
+}
 
-          .subtitle {
-            font-size: 18px;
-            color: rgba(243, 247, 250, 0.78);
-          }
+.title-text {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #12E8D5;
+}
 
-          .program-name {
-            font-size: 40px;
-            font-weight: 600;
-            margin-top: 6px;
-            background: linear-gradient(90deg, #12E8D5 0%, #8E2DE2 60%, #FF8A00 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          }
+/* ===== MAIN CONTENT ===== */
+.content {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
 
-          .meta-row {
-            margin-top: 22px;
-            display: flex;
-            justify-content: center;
-            gap: 80px;
-          }
+.eyebrow {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(243, 247, 250, 0.7);
+}
 
-          .meta-block {
-            text-align: center;
-          }
+.holder-name {
+  font-size: 56px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-shadow:
+    0 0 16px rgba(18, 232, 213, 0.45),
+    0 0 26px rgba(142, 45, 226, 0.3);
+}
 
-          .meta-label {
-            font-size: 13px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.55);
-            margin-bottom: 4px;
-          }
+.subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(243, 247, 250, 0.72);
+}
 
-          .meta-value {
-            font-size: 16px;
-            font-weight: 500;
-            color: #F9FAFB;
-          }
+/* PROGRAM BAR */
+.program-bar {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
 
-          .footer {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr 1.1fr;
-            align-items: end;
-            column-gap: 40px;
-          }
+.program-bar-inner {
+  padding: 0;
+}
 
-          .issuer-block {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-          }
+.program-text {
+  font-size: 30px;
+  font-weight: 600;
+  color: #FF8A00;
+  line-height: 1.2;
+}
 
-          .issuer-label {
-            font-size: 12px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.6);
-          }
+/* ===== FOOTER ===== */
+.footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  position: relative;
+  z-index: 2;
+  gap: 20px;
+  padding-top: 8px;
+}
 
-          .issuer-name {
-            font-size: 16px;
-            font-weight: 600;
-          }
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: end;
+}
 
-          .cert-id {
-            font-size: 12px;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.6);
-            margin-top: 10px;
-          }
+.footer-label {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: rgba(243, 247, 250, 0.65);
+  text-transform: uppercase;
+  line-height: 1;
+}
 
-          .cert-id-value {
-            font-size: 14px;
-            font-family: monospace;
-            color: #12E8D5;
-          }
+.footer-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #F3F7FA;
+  line-height: 1.4;
+}
 
-          .qr-section {
-            text-align: center;
-          }
+.cert-id {
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: rgba(243, 247, 250, 0.6);
+  text-transform: uppercase;
+  line-height: 1;
+}
 
-          .qr-code {
-            width: 120px;
-            height: 120px;
-            padding: 10px;
-            background: #0F172A;
-            border-radius: 16px;
-            border: 1px solid rgba(18, 232, 213, 0.7);
-            box-shadow:
-              0 0 12px rgba(18, 232, 213, 0.4),
-              0 0 24px rgba(142, 45, 226, 0.3);
-            margin: 0 auto 8px auto;
-          }
+.cert-id-value {
+  font-size: 13px;
+  font-family: monospace;
+  color: #12E8D5;
+  margin-top: 4px;
+  line-height: 1.4;
+}
 
-          .qr-label {
-            font-size: 11px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.7);
-          }
+.qr-block {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
 
-          .qr-url {
-            margin-top: 2px;
-            font-size: 10px;
-            color: rgba(243, 247, 250, 0.45);
-            font-family: monospace;
-            max-width: 200px;
-            margin-left: auto;
-            margin-right: auto;
-            word-break: break-all;
-          }
+.qr-img {
+  width: 120px;
+  height: 120px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #0F172A;
+  border: 1px solid rgba(18, 232, 213, 0.7);
+  margin: 0 auto 8px auto;
+  box-shadow:
+    0 0 12px rgba(18, 232, 213, 0.4),
+    0 0 24px rgba(142, 45, 226, 0.25);
+  display: block;
+}
 
-          .signature-block {
-            text-align: right;
-          }
+.qr-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: rgba(243, 247, 250, 0.6);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
 
-          .signature-image {
-            width: 180px;
-            height: auto;
-            margin-bottom: 6px;
-            filter: invert(1) brightness(2);
-          }
+.qr-url {
+  margin-top: 3px;
+  font-size: 10px;
+  font-family: monospace;
+  color: rgba(243, 247, 250, 0.45);
+  line-height: 1.3;
+  max-width: 180px;
+  word-break: break-all;
+}
 
-          .signature-line {
-            width: 180px;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(18, 232, 213, 0.2), rgba(142, 45, 226, 0.7));
-            margin-bottom: 6px;
-            margin-left: auto;
-          }
+.sig-block {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
 
-          .signature-name {
-            font-size: 13px;
-            font-weight: 600;
-          }
+.sig-img {
+  width: 180px;
+  height: auto;
+  filter: brightness(2);
+  margin-bottom: 6px;
+  margin-left: auto;
+}
 
-          .signature-title {
-            font-size: 11px;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.7);
-          }
+.sig-line {
+  width: 180px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(18, 232, 213, 0.4), rgba(142, 45, 226, 0.4));
+  margin-bottom: 6px;
+  margin-left: auto;
+}
 
-          .signature-hash-label {
-            margin-top: 8px;
-            font-size: 10px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: rgba(243, 247, 250, 0.5);
-          }
+.sig-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F3F7FA;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
 
-          .signature-hash {
-            margin-top: 2px;
-            font-size: 9px;
-            color: rgba(243, 247, 250, 0.42);
-            font-family: monospace;
-            max-width: 260px;
-            word-break: break-all;
-            margin-left: auto;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="security-layer"></div>
+.sig-title {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(243, 247, 250, 0.7);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+</style>
+</head>
 
-        <div class="outer-frame">
-          <div class="border-teal">
-            <div class="border-purple">
-              <div class="border-orange">
-                <div class="watermark-logo">
-                  <img src="${symbolLogoUrl}" alt="Nexalaris Symbol Watermark" />
-                </div>
+<body>
 
-                <!-- HEADER -->
-                <header class="header">
-                  <img src="${data.logo_url}" alt="Nexalaris Logo" class="logo-full" />
-                  <div class="cert-title">CERTIFICATE OF COMPLETION</div>
-                  <div class="divider"></div>
-                </header>
+<div class="security-layer"></div>
 
-                <!-- MAIN CONTENT -->
-                <main class="content">
-                  <div class="eyebrow">THIS CERTIFIES THAT</div>
-                  <div class="holder-name">${data.holder_name}</div>
-                  <div class="subtitle">has successfully completed</div>
-                  <div class="program-name">${data.program_name}</div>
+<div class="outer-frame">
+  <div class="border-teal">
+    <div class="border-purple">
+      <div class="border-orange">
 
-                  <div class="meta-row">
-                    <div class="meta-block">
-                      <div class="meta-label">Issued On</div>
-                      <div class="meta-value">${formattedIssueDate}</div>
-                    </div>
-                  </div>
-                </main>
+        <div class="watermark">
+          <img src="${symbolLogoUrl}">
+        </div>
 
-                <!-- FOOTER -->
-                <footer class="footer">
-                  <div class="issuer-block">
-                    <div class="issuer-label">Issued By</div>
-                    <div class="issuer-name">${issuerName}</div>
-                    <div class="cert-id">Certificate ID</div>
-                    <div class="cert-id-value">${data.cert_code}</div>
-                  </div>
-
-                  <div class="qr-section">
-                    <img src="${data.qr_code_data_url}" alt="Verification QR Code" class="qr-code" />
-                    <div class="qr-label">Scan to Verify</div>
-                    <div class="qr-url">https://verify.nexalaris.com/c/${data.cert_code}</div>
-                  </div>
-
-                  <div class="signature-block">
-                    <img src="${signatureImageUrl}" alt="Authorized Signature" class="signature-image" />
-                    <div class="signature-line"></div>
-                    <div class="signature-name">Bibek Kumar Sah</div>
-                    <div class="signature-title">Founder & CTO, Nexalaris Tech</div>
-                    ${
-                      data.signature_hash
-                        ? `<div class="signature-hash-label">Digital Signature Hash</div>
-                           <div class="signature-hash">${data.signature_hash}</div>`
-                        : ""
-                    }
-                  </div>
-                </footer>
-              </div>
+        <div class="header">
+          <img src="${data.logo_url}" class="header-logo">
+          <div class="title-bar">
+            <div class="title-bar-inner">
+              <div class="title-text">CERTIFICATE OF COMPLETION</div>
             </div>
           </div>
         </div>
-      </body>
-    </html>
-  `
+
+        <div class="content">
+          <div class="eyebrow">THIS CERTIFIES THAT</div>
+
+          <div class="holder-name">${data.holder_name}</div>
+
+          <div class="subtitle">has successfully completed</div>
+
+          <div class="program-bar">
+            <div class="program-bar-inner">
+              <div class="program-text">${data.program_name}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <!-- LEFT -->
+          <div class="footer-left">
+            <div class="footer-label">Issued By</div>
+            <div class="footer-value">${issuerName}</div>
+            <div class="cert-id" style="margin-top: 8px;">Issued On</div>
+            <div class="footer-value">${formattedIssueDate}</div>
+            <div class="cert-id">Certificate ID</div>
+            <div class="cert-id-value">${data.cert_code}</div>
+          </div>
+
+          <!-- CENTER: QR -->
+          <div class="qr-block">
+            <img src="${data.qr_code_data_url}" class="qr-img">
+            <div class="qr-label">Scan to Verify</div>
+            <div class="qr-url">https://verify.nexalaris.com/c/${data.cert_code}</div>
+          </div>
+
+          <!-- RIGHT: SIGNATURE -->
+          <div class="sig-block">
+            <img src="${signatureImageUrl}" class="sig-img">
+            <div class="sig-line"></div>
+            <div class="sig-name">BIBEK KUMAR SAH</div>
+            <div class="sig-title">CEO, CTO & FOUNDER</div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+`
 }

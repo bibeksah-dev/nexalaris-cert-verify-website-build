@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, Copy, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -53,7 +53,8 @@ const statusConfig = {
 export function CertificateDetailsClient({ certificate }: CertificateDetailsProps) {
   const { toast } = useToast()
   const [qrDataUrl, setQrDataUrl] = useState<string>("")
-  const [downloading, setDownloading] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState<"png" | "pdf" | null>(null)
+  const canvasCacheRef = useRef<HTMLCanvasElement | null>(null)
 
   const config = statusConfig[certificate.status]
   const StatusIcon = config.icon
@@ -63,16 +64,19 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
   // ---------------------------
   useEffect(() => {
     const generateQR = async () => {
-      const verifyUrl = `${window.location.origin}/c/${certificate.cert_code}`
-      const dataUrl = await QRCode.toDataURL(verifyUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: "#12E8D5",
-          light: "#0B0C10",
-        },
-      })
-      setQrDataUrl(dataUrl)
+      try {
+        const verifyUrl = `${window.location.origin}/c/${certificate.cert_code}`
+        const dataUrl = await QRCode.toDataURL(verifyUrl, {
+          width: 256,
+          margin: 2,
+          errorCorrectionLevel: "M",
+          color: { dark: "#12E8D5", light: "#0B0C10" },
+        })
+        setQrDataUrl(dataUrl)
+      } catch (e) {
+        console.error("QR generation failed", e)
+        toast({ title: "QR error", description: "Could not generate QR code.", variant: "destructive" })
+      }
     }
     generateQR()
   }, [certificate.cert_code])
@@ -89,40 +93,45 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
   //  CREATE HTML → RENDER → EXPORT VIA html2canvas / jsPDF
   // ------------------------------------------------------
   const renderCertificateCanvas = async (): Promise<HTMLCanvasElement> => {
-    return new Promise(async (resolve) => {
-      const container = document.createElement("div")
-      container.style.position = "fixed"
-      container.style.left = "-9999px"
-      container.style.top = "0"
-      container.style.width = "1122px"
-      container.style.height = "794px"
-      container.style.background = "#020617"
+    if (canvasCacheRef.current) return canvasCacheRef.current
 
-      const html = generateCertificateHTML({
-        cert_code: certificate.cert_code,
-        holder_name: certificate.holder_name,
-        program_name: certificate.programName,
-        issued_at: certificate.issued_at,
-        expires_at: null,
-        signature_hash: certificate.signature_hash,
-        qr_code_data_url: qrDataUrl,
-        logo_url: "/logo-full.png",
-        logo_symbol_url: "/logo-symbol.png",
-        signature_image_url: "/signature.png",
-      })
+    const container = document.createElement("div")
+    container.style.position = "fixed"
+    container.style.left = "-9999px"
+    container.style.top = "0"
+    container.style.width = "1122px"
+    container.style.height = "794px"
+    container.style.background = "#020617"
+    container.style.contain = "layout style paint size"
 
-      container.innerHTML = html
-      document.body.appendChild(container)
-
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        backgroundColor: "#020617",
-        useCORS: true,
-      })
-
-      document.body.removeChild(container)
-      resolve(canvas)
+    const html = generateCertificateHTML({
+      cert_code: certificate.cert_code,
+      holder_name: certificate.holder_name,
+      program_name: certificate.programName,
+      issued_at: certificate.issued_at,
+      expires_at: null,
+      signature_hash: certificate.signature_hash,
+      qr_code_data_url: qrDataUrl,
+      logo_url: "/logo-full.png",
+      logo_symbol_url: "/logo-symbol.png",
+      signature_image_url: "/signature.png",
     })
+
+    container.innerHTML = html
+    document.body.appendChild(container)
+
+    // Ensure layout settles before capture
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      backgroundColor: "#020617",
+      useCORS: true,
+    })
+
+    document.body.removeChild(container)
+    canvasCacheRef.current = canvas
+    return canvas
   }
 
   const handleDownloadPDF = async () => {
@@ -135,6 +144,11 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       return
     }
 
+    if (!qrDataUrl) {
+      toast({ title: "Please wait", description: "Preparing QR code..." })
+      return
+    }
+
     setDownloading("pdf")
 
     try {
@@ -143,6 +157,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
         orientation: "landscape",
         unit: "px",
         format: [1122, 794],
+        compress: true,
       })
 
       const imgData = canvas.toDataURL("image/png")
@@ -169,6 +184,11 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
         description: "Revoked certificates cannot be downloaded.",
         variant: "destructive",
       })
+      return
+    }
+
+    if (!qrDataUrl) {
+      toast({ title: "Please wait", description: "Preparing QR code..." })
       return
     }
 
@@ -202,12 +222,15 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     setDownloading(null)
   }
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+  const formattedIssuedAt = useMemo(
+    () =>
+      new Date(certificate.issued_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    [certificate.issued_at],
+  )
 
   // ------------------------------------------------------
   //          UI RENDERING (unchanged from your design)
@@ -261,7 +284,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <h3 className="text-xs text-[#F3F7FA]/70">Issued At</h3>
-                <p className="text-sm text-[#F3F7FA]">{formatDate(certificate.issued_at)}</p>
+                <p className="text-sm text-[#F3F7FA]">{formattedIssuedAt}</p>
               </div>
             </div>
 
@@ -285,7 +308,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Button
             onClick={handleDownloadPDF}
-            disabled={downloading !== null || certificate.status === "REVOKED"}
+            disabled={downloading !== null || certificate.status === "REVOKED" || !qrDataUrl}
             className="rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-[#0B0C10]"
           >
             <Download className="mr-2 h-4 w-4" />
@@ -294,7 +317,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
 
           <Button
             onClick={handleDownloadPNG}
-            disabled={downloading !== null || certificate.status === "REVOKED"}
+            disabled={downloading !== null || certificate.status === "REVOKED" || !qrDataUrl}
             className="rounded-xl bg-gradient-to-r from-[#12E8D5] to-[#8E2DE2] text-[#0B0C10]"
           >
             <Download className="mr-2 h-4 w-4" />
