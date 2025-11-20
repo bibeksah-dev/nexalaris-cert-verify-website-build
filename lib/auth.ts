@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server"
 
 const SESSION_COOKIE = "nexalaris_admin_session"
 const CSRF_COOKIE = "nexalaris_admin_csrf"
-const SESSION_TTL = 7 * 24 * 60 * 60 // 7 days in seconds
+const SESSION_TTL = 60 * 60 // 1 hour in seconds
 
 // Return raw token from cookie
 export async function getAdminSessionToken(): Promise<string | undefined> {
