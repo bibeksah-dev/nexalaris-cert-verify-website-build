@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseServerClient, getSupabaseAdminClient } from "@/lib/supabase/server"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 import type { NextRequest } from "next/server"
@@ -65,7 +65,8 @@ export async function clearAdminSession() {
 }
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
-  const supabase = await getSupabaseServerClient()
+  // Use admin client to bypass RLS for reading the password hash
+  const supabase = getSupabaseAdminClient()
   // Get the admin password hash
   const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").single()
 
