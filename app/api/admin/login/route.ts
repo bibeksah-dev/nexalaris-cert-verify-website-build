@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyAdminPassword } from "@/lib/auth"
+import { verifyAdminPassword, setAdminSession } from "@/lib/auth"
 
 const SESSION_COOKIE = "nexalaris_admin_session"
 
@@ -24,6 +24,25 @@ async function getRedisClient() {
 
 const inMemoryAttempts = new Map<string, number[]>()
 
+// Cleanup interval for in-memory map to prevent DoS via memory exhaustion
+const CLEANUP_INTERVAL = 60 * 60 * 1000 // 1 hour
+let lastCleanup = Date.now()
+
+function cleanupInMemoryAttempts() {
+  const now = Date.now()
+  if (now - lastCleanup < CLEANUP_INTERVAL) return
+
+  for (const [ip, attempts] of inMemoryAttempts.entries()) {
+    const recent = attempts.filter((t) => now - t < WINDOW_MS)
+    if (recent.length === 0) {
+      inMemoryAttempts.delete(ip)
+    } else {
+      inMemoryAttempts.set(ip, recent)
+    }
+  }
+  lastCleanup = now
+}
+
 async function isRateLimited(ip: string) {
   const now = Date.now()
   const client = await getRedisClient()
@@ -40,6 +59,9 @@ async function isRateLimited(ip: string) {
     }
   }
 
+  // Trigger cleanup occasionally
+  cleanupInMemoryAttempts()
+
   const attempts = inMemoryAttempts.get(ip) || []
   const recent = attempts.filter((t) => now - t < WINDOW_MS)
   recent.push(now)
@@ -51,9 +73,12 @@ export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
 
-    const ip = (request.headers.get("x-forwarded-for") || request.ip || "unknown").toString().split(",")[0]
+    // Prefer the server-provided remote IP when available. Only fall back to
+    // X-Forwarded-For if the runtime/platform (trusted proxy) sets it.
+    const forwarded = request.headers.get("x-forwarded-for")
+    const ip = ((request as any).ip || (forwarded ? forwarded.toString().split(",")[0].trim() : "unknown")).toString()
 
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(ip)) {
       return NextResponse.json({ error: "Too many attempts" }, { status: 429 })
     }
     if (!password) {
@@ -66,27 +91,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 })
     }
 
-<<<<<<< HEAD
-    // Set session cookie (also sets csrf cookie)
+    // Create server-side session (sets cookies via cookieStore)
     await setAdminSession()
-=======
-    const response = NextResponse.json({
-      success: true,
-      redirect: "/admin/dashboard",
-    })
->>>>>>> 1cd30ac6926b66b0122989ba2963981ce2fecb10
 
-    response.cookies.set({
-      name: SESSION_COOKIE,
-      value: "authenticated",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    })
-
-    return response
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
