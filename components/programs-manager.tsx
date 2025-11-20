@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -60,7 +61,8 @@ export function ProgramsManager({ programs: initialPrograms }: ProgramsManagerPr
 
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfTokenFromCookie() || "" },
+        credentials: "include",
         body: JSON.stringify(formData),
       })
 
@@ -102,6 +104,8 @@ export function ProgramsManager({ programs: initialPrograms }: ProgramsManagerPr
     try {
       const response = await fetch(`/api/admin/programs/${deletingProgramId}`, {
         method: "DELETE",
+        headers: { "x-csrf-token": getCsrfTokenFromCookie() || "" },
+        credentials: "include",
       })
 
       if (response.ok) {

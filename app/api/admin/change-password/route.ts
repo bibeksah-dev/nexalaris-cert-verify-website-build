@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { changeAdminPassword, isAdminAuthenticated } from "@/lib/auth"
+import { changeAdminPassword, verifyAdminRequest } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const isAuthenticated = await isAdminAuthenticated()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Check authentication + CSRF
+    const verification = await verifyAdminRequest(request)
+    if (!verification.ok) {
+      return NextResponse.json({ error: verification.error || "Unauthorized" }, { status: 401 })
     }
 
     const { current_password, new_password, confirm_new_password } = await request.json()

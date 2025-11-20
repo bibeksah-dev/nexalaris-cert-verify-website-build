@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server"
 
 const SESSION_COOKIE = "nexalaris_admin_session"
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check if accessing admin routes (except login)
@@ -12,6 +12,23 @@ export function middleware(request: NextRequest) {
 
     if (!session) {
       // Redirect to login if not authenticated
+      const loginUrl = new URL("/admin/login", request.url)
+      loginUrl.searchParams.set("redirect", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Verify session by calling internal verify endpoint. This avoids direct DB access from middleware.
+    try {
+      const base = `${request.nextUrl.protocol}//${request.nextUrl.host}`
+      const verifyUrl = new URL("/api/admin/verify", base).toString()
+      const r = await fetch(verifyUrl, { headers: { cookie: request.headers.get("cookie") || "" }, method: "GET" })
+      if (!r || r.status !== 200) {
+        const loginUrl = new URL("/admin/login", request.url)
+        loginUrl.searchParams.set("redirect", pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+    } catch (err) {
+      // On error, redirect to login for safety
       const loginUrl = new URL("/admin/login", request.url)
       loginUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(loginUrl)

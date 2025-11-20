@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Eye, Download, Ban } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +54,8 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
     try {
       const response = await fetch(`/api/admin/certificates/${selectedCertCode}/revoke`, {
         method: "POST",
+        headers: { "x-csrf-token": getCsrfTokenFromCookie() || "" },
+        credentials: "include",
       })
 
       if (response.ok) {

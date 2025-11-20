@@ -8,6 +8,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { AnimatedBackground } from "@/components/animated-background"
 import { useToast } from "@/hooks/use-toast"
+import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -28,7 +29,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/admin/logout", { method: "POST" })
+      await fetch("/api/admin/logout", { method: "POST", headers: { "x-csrf-token": getCsrfTokenFromCookie() || "" }, credentials: "include" })
       router.push("/admin/login")
     } catch (error) {
       toast({

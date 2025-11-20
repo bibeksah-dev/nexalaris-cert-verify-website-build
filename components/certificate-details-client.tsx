@@ -457,6 +457,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
 
         <div className="prose prose-invert max-w-none">
           <ReactMarkdown
+            skipHtml={true}
             className="space-y-3 text-[#F3F7FA]/90"
             components={{
               ul: ({ children }) => <ul className="space-y-2 pl-5 text-background">{children}</ul>,
