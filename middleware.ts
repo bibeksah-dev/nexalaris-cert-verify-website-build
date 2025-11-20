@@ -6,12 +6,14 @@ const SESSION_COOKIE = "nexalaris_admin_session"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if accessing admin routes (except login)
+  // Skip checks for non-admin routes
+  if (!pathname.startsWith("/admin")) return NextResponse.next()
+
+  // Check if accessing admin route (except login)
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const session = request.cookies.get(SESSION_COOKIE)
 
     if (!session) {
-      // Redirect to login if not authenticated
       const loginUrl = new URL("/admin/login", request.url)
       loginUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(loginUrl)
@@ -38,6 +40,7 @@ export async function middleware(request: NextRequest) {
   // Redirect to dashboard if already logged in and trying to access login
   if (pathname === "/admin/login") {
     const session = request.cookies.get(SESSION_COOKIE)
+
     if (session) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url))
     }

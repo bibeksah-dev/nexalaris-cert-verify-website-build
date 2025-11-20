@@ -67,6 +67,7 @@ export async function clearAdminSession() {
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const supabase = await getSupabaseServerClient()
 
+<<<<<<< HEAD
   // Get the admin password hash
   const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").single()
 
@@ -78,27 +79,49 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
   // Verify password
   const result = await bcrypt.compare(password, adminAuth.password_hash)
   return result
+=======
+  const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").limit(1).single()
+
+  if (error || !adminAuth) {
+    const { data: existingAdmin } = await supabase.from("admin_auth").select("id").limit(1).single()
+
+    if (existingAdmin) {
+      return false
+    }
+
+    const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || "changeit!"
+    const hash = await bcrypt.hash(defaultPassword, 10)
+
+    const { error: insertError } = await supabase.from("admin_auth").insert({ password_hash: hash })
+
+    if (insertError) {
+      return false
+    }
+
+    return password === defaultPassword
+  }
+
+  const isValid = await bcrypt.compare(password, adminAuth.password_hash)
+  return isValid
+>>>>>>> 1cd30ac6926b66b0122989ba2963981ce2fecb10
 }
 
 export async function changeAdminPassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<{ success: boolean; error?: string }> {
-  // Verify current password
   const isValid = await verifyAdminPassword(currentPassword)
   if (!isValid) {
     return { success: false, error: "Current password is incorrect" }
   }
 
-  // Hash new password
   const hash = await bcrypt.hash(newPassword, 10)
 
-  // Update password
   const supabase = await getSupabaseServerClient()
   const { error } = await supabase
     .from("admin_auth")
     .update({ password_hash: hash, updated_at: new Date().toISOString() })
-    .eq("id", 1)
+    .limit(1)
 
   if (error) {
     return { success: false, error: "Failed to update password" }

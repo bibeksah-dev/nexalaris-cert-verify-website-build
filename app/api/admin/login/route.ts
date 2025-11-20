@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyAdminPassword, setAdminSession } from "@/lib/auth"
+import { verifyAdminPassword } from "@/lib/auth"
+
+const SESSION_COOKIE = "nexalaris_admin_session"
 
 // Rate limiter: prefer Redis when REDIS_URL is set, otherwise fall back to in-memory limiter.
 const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
@@ -54,7 +56,6 @@ export async function POST(request: NextRequest) {
     if (isRateLimited(ip)) {
       return NextResponse.json({ error: "Too many attempts" }, { status: 429 })
     }
-
     if (!password) {
       return NextResponse.json({ error: "Password is required" }, { status: 400 })
     }
@@ -65,10 +66,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 })
     }
 
+<<<<<<< HEAD
     // Set session cookie (also sets csrf cookie)
     await setAdminSession()
+=======
+    const response = NextResponse.json({
+      success: true,
+      redirect: "/admin/dashboard",
+    })
+>>>>>>> 1cd30ac6926b66b0122989ba2963981ce2fecb10
 
-    return NextResponse.json({ success: true })
+    response.cookies.set({
+      name: SESSION_COOKIE,
+      value: "authenticated",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    })
+
+    return response
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

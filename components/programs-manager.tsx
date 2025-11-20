@@ -176,10 +176,16 @@ export function ProgramsManager({ programs: initialPrograms }: ProgramsManagerPr
               Add Program
             </Button>
           </DialogTrigger>
-          <DialogContent className="border-white/10 bg-[#0B0C10] sm:max-w-md">
+          <DialogContent
+            className="border-white/10 bg-[#0B0C10] sm:max-w-md"
+            aria-describedby="program-dialog-description"
+          >
             <DialogHeader>
               <DialogTitle className="text-[#F3F7FA]">{editingProgram ? "Edit Program" : "Create Program"}</DialogTitle>
             </DialogHeader>
+            <p id="program-dialog-description" className="sr-only">
+              {editingProgram ? "Edit the program details below" : "Create a new program by filling out the form below"}
+            </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-[#F3F7FA]">
