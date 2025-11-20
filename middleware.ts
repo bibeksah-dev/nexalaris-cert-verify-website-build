@@ -19,10 +19,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    // Verify session by calling internal verify endpoint. This avoids direct DB access from middleware.
+    // Verify session by calling internal verify endpoint. Use the request URL as the base
+    // to avoid constructing an origin from potentially tainted Host headers.
     try {
-      const base = `${request.nextUrl.protocol}//${request.nextUrl.host}`
-      const verifyUrl = new URL("/api/admin/verify", base).toString()
+      const verifyUrl = new URL("/api/admin/verify", request.url).toString()
       const r = await fetch(verifyUrl, { headers: { cookie: request.headers.get("cookie") || "" }, method: "GET" })
       if (!r || r.status !== 200) {
         const loginUrl = new URL("/admin/login", request.url)

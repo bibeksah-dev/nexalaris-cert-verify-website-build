@@ -1,0 +1,23 @@
+
+> my-v0-project@0.1.0 build C:\Users\bibek\Projects\nexalaris-cert-verify-website-build
+> next build
+
+ ⚠ turbopack.root should be absolute, using: C:\Users\bibek\Projects\nexalaris-cert-verify-website-build
+   ▲ Next.js 16.0.0 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 15.9s
+   Running TypeScript ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/17) ...
+Error occurred prerendering page "/admin/dashboard". Read more: https://nextjs.org/docs/messages/prerender-error
+Error: Missing Supabase environment variables
+    at cg (C:\Users\bibek\Projects\nexalaris-cert-verify-website-build\.next\server\chunks\ssr\_4c030e29._.js:37:47869)
+    at m (C:\Users\bibek\Projects\nexalaris-cert-verify-website-build\.next\server\chunks\ssr\[root-of-the-server]__c822271a._.js:1:2651)
+    at stringify (<anonymous>) {
+  digest: '2545488688'
+}
+Export encountered an error on /admin/dashboard/page: /admin/dashboard, exiting the build.
+ ⨯ Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.

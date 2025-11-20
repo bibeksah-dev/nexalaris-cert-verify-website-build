@@ -46,7 +46,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
-    "crypto": "1.0.1",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
     "html2canvas": "1.4.1",
@@ -54,13 +53,8 @@
     "jspdf": "3.0.3",
     "lucide-react": "^0.454.0",
     "next": "16.0.0",
-<<<<<<< HEAD
-    "next-themes": "^0.4.6",
-    "qrcode": "1.5.4",
-=======
-    "next-themes": "latest",
-    "qrcode": "latest",
->>>>>>> 1cd30ac6926b66b0122989ba2963981ce2fecb10
+  "next-themes": "^0.4.6",
+  "qrcode": "1.5.4",
     "react": "19.2.0",
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",

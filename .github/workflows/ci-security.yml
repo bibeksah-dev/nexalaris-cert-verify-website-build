@@ -1,0 +1,20 @@
+name: CI - Security Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run env leak detection script
+        run: |
+          chmod +x scripts/check_env_leaks.sh
+          ./scripts/check_env_leaks.sh

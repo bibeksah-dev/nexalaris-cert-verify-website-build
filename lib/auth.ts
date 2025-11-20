@@ -66,8 +66,6 @@ export async function clearAdminSession() {
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const supabase = await getSupabaseServerClient()
-
-<<<<<<< HEAD
   // Get the admin password hash
   const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").single()
 
@@ -79,31 +77,6 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
   // Verify password
   const result = await bcrypt.compare(password, adminAuth.password_hash)
   return result
-=======
-  const { data: adminAuth, error } = await supabase.from("admin_auth").select("password_hash").limit(1).single()
-
-  if (error || !adminAuth) {
-    const { data: existingAdmin } = await supabase.from("admin_auth").select("id").limit(1).single()
-
-    if (existingAdmin) {
-      return false
-    }
-
-    const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || "changeit!"
-    const hash = await bcrypt.hash(defaultPassword, 10)
-
-    const { error: insertError } = await supabase.from("admin_auth").insert({ password_hash: hash })
-
-    if (insertError) {
-      return false
-    }
-
-    return password === defaultPassword
-  }
-
-  const isValid = await bcrypt.compare(password, adminAuth.password_hash)
-  return isValid
->>>>>>> 1cd30ac6926b66b0122989ba2963981ce2fecb10
 }
 
 export async function changeAdminPassword(
@@ -152,9 +125,15 @@ export async function verifyAdminRequest(request: NextRequest): Promise<{ ok: bo
     const valid = await isSessionTokenValid(token)
     if (!valid) return { ok: false, error: "Invalid session" }
 
-    // Verify CSRF (double-submit)
-    if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-      return { ok: false, error: "CSRF validation failed" }
+    // Only enforce CSRF for state-changing (unsafe) HTTP methods.
+    // Safe methods like GET/HEAD/OPTIONS should not require a CSRF header.
+    const method = (request as any).method ? (request as any).method.toString().toUpperCase() : "GET"
+    const safeMethods = ["GET", "HEAD", "OPTIONS"]
+    if (!safeMethods.includes(method)) {
+      // Verify CSRF (double-submit) for unsafe methods
+      if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+        return { ok: false, error: "CSRF validation failed" }
+      }
     }
 
     return { ok: true }

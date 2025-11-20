@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
-import { isAdminAuthenticated } from "@/lib/auth"
+import { verifyAdminRequest } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    const isAuthenticated = await isAdminAuthenticated()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const verification = await verifyAdminRequest(request)
+    if (!verification.ok) {
+      return NextResponse.json({ error: verification.error || "Unauthorized" }, { status: 401 })
     }
 
     const { name, slug, description, image_url } = await request.json()

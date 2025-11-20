@@ -10,6 +10,16 @@ import { useEffect } from "react"
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 
+function escapeHtml(input: string | null | undefined) {
+  if (typeof input !== "string") return ""
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 interface CertificateDetailsProps {
   certificate: {
     cert_code: string
@@ -104,6 +114,17 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       },
     })
 
+    const safeHolderName = escapeHtml(certificate.holder_name)
+    const safeProgramName = escapeHtml(certificate.programName)
+    const safeCertCode = escapeHtml(certificate.cert_code)
+    const safeIssueDate = escapeHtml(
+      new Date(certificate.issued_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    )
+
     iframeDoc.open()
     iframeDoc.write(`
       <!DOCTYPE html>
@@ -157,13 +178,13 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
                 This certifies that
               </div>
               <div style="font-size: 48px; font-weight: bold; color: rgb(255, 255, 255); text-align: center;">
-                ${certificate.holder_name}
+                ${safeHolderName}
               </div>
               <div style="font-size: 20px; color: rgb(136, 136, 136);">
                 has successfully completed
               </div>
               <div style="font-size: 36px; font-weight: 600; color: rgb(18, 232, 213); text-align: center;">
-                ${certificate.programName}
+                ${safeProgramName}
               </div>
             </div>
 
@@ -172,11 +193,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
               <div>
                 <div style="font-size: 16px; color: rgb(136, 136, 136); margin-bottom: 6px;">Issue Date</div>
                 <div style="font-size: 18px; color: rgb(255, 255, 255);">
-                  ${new Date(certificate.issued_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  ${safeIssueDate}
                 </div>
               </div>
               <div>
@@ -185,7 +202,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
               <div style="text-align: right;">
                 <div style="font-size: 16px; color: rgb(136, 136, 136); margin-bottom: 6px;">Certificate ID</div>
                 <div style="font-size: 18px; color: rgb(18, 232, 213); font-weight: 600;">
-                  ${certificate.cert_code}
+                  ${safeCertCode}
                 </div>
               </div>
             </div>
