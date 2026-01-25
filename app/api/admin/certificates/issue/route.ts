@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { verifyAdminRequest } from "@/lib/auth"
+import { sendCertificateIssuedEmail } from "@/lib/email"
 import crypto from "crypto"
 
 function generateCertCode(): string {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Required fields are missing" }, { status: 400 })
     }
 
-    const supabase = await getSupabaseServerClient()
+    const supabase = getSupabaseAdminClient()
 
     // Generate unique certificate code
     let certCode = generateCertCode()
@@ -71,6 +72,27 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Insert error:", error)
       return NextResponse.json({ error: "Failed to issue certificate" }, { status: 500 })
+    }
+
+    // Send email notification if holder_email is provided (fire and forget)
+    if (holder_email) {
+      // Fetch program name for the email
+      const { data: program } = await supabase
+        .from("programs")
+        .select("name")
+        .eq("id", program_id)
+        .single()
+
+      if (program?.name) {
+        sendCertificateIssuedEmail({
+          holder_name,
+          holder_email,
+          cert_code: certCode,
+          program_name: program.name,
+        }).catch((err) => {
+          console.error("Failed to send certificate email:", err)
+        })
+      }
     }
 
     return NextResponse.json(data)
