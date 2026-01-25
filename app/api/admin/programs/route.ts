@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { verifyAdminRequest } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name, slug, and description are required" }, { status: 400 })
     }
 
-    const supabase = await getSupabaseServerClient()
+    const supabase = getSupabaseAdminClient()
 
     const { data, error } = await supabase
       .from("programs")
