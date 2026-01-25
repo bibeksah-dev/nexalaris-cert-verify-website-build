@@ -1,3 +1,5 @@
+import { SPACE_GROTESK_FONT_CSS } from "./fonts"
+
 export interface CertificateData {
   cert_code: string
   holder_name: string
@@ -31,15 +33,19 @@ export function generateCertificateHTML(data: CertificateData): string {
 <meta charset="UTF-8">
 <title>Nexalaris Certificate</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
+/* Embedded fonts for consistent rendering across all systems */
+${SPACE_GROTESK_FONT_CSS}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Prevent font synthesis */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html, body {
@@ -49,7 +55,7 @@ html, body {
 
 body {
   background: radial-gradient(circle at 0% 0%, #0c1524 0%, #020617 45%, #020617 100%);
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   position: relative;
   overflow: hidden;
   color: #F3F7FA;
@@ -283,7 +289,7 @@ body {
 
 .cert-id-value {
   font-size: 13px;
-  font-family: monospace;
+  font-family: 'Space Mono', monospace;
   color: #12E8D5;
   margin-top: 4px;
   line-height: 1.4;
@@ -323,7 +329,7 @@ body {
 .qr-url {
   margin-top: 3px;
   font-size: 10px;
-  font-family: monospace;
+  font-family: 'Space Mono', monospace;
   color: rgba(243, 247, 250, 0.45);
   line-height: 1.3;
   max-width: 180px;

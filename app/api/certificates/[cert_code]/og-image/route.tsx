@@ -3,6 +3,15 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export const runtime = "edge"
 
+// Load Space Grotesk font for consistent rendering
+async function loadFont() {
+  const fontData = await fetch(
+    new URL('https://fonts.gstatic.com/s/spacegrotesk/v16/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUXskPMBBSSJLm2E.woff')
+  ).then((res) => res.arrayBuffer())
+
+  return fontData
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ cert_code: string }> }) {
   try {
     const { cert_code } = await params
@@ -43,6 +52,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
       tealTransparent: "rgba(18, 232, 213, 0.3)",
     }
 
+    const fontData = await loadFont()
+
     return new ImageResponse(
       <div
         style={{
@@ -55,6 +66,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
           backgroundColor: colors.dark,
           backgroundImage: `radial-gradient(circle at 25% 25%, rgba(18, 232, 213, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(142, 45, 226, 0.1) 0%, transparent 50%)`,
           padding: "80px",
+          fontFamily: "Space Grotesk",
         }}
       >
         {/* Certificate Container */}
@@ -150,6 +162,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
       {
         width: 1200,
         height: 800,
+        fonts: [
+          {
+            name: "Space Grotesk",
+            data: fontData,
+            style: "normal",
+            weight: 400,
+          },
+        ],
       },
     )
   } catch (error) {

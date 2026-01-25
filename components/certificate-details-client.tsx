@@ -10,6 +10,7 @@ import html2canvas from "html2canvas"
 import ReactMarkdown from "react-markdown"
 
 import { generateCertificateHTML } from "@/lib/certificate-template" // your new template
+import { preloadFonts } from "@/lib/fonts"
 
 interface CertificateDetailsProps {
   certificate: {
@@ -95,14 +96,8 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
   const renderCertificateCanvas = async (): Promise<HTMLCanvasElement> => {
     if (canvasCacheRef.current) return canvasCacheRef.current
 
-    const container = document.createElement("div")
-    container.style.position = "fixed"
-    container.style.left = "-9999px"
-    container.style.top = "0"
-    container.style.width = "1122px"
-    container.style.height = "794px"
-    container.style.background = "#020617"
-    container.style.contain = "layout style paint size"
+    // Preload fonts before rendering to ensure consistent typography
+    await preloadFonts()
 
     const html = generateCertificateHTML({
       cert_code: certificate.cert_code,
@@ -117,19 +112,59 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       signature_image_url: "/signature.png",
     })
 
-    container.innerHTML = html
-    document.body.appendChild(container)
+    // Use an iframe to isolate the certificate styles from the main page
+    const iframe = document.createElement("iframe")
+    iframe.style.position = "fixed"
+    iframe.style.left = "-9999px"
+    iframe.style.top = "0"
+    iframe.style.width = "1122px"
+    iframe.style.height = "794px"
+    iframe.style.border = "none"
+    iframe.style.visibility = "hidden"
 
-    // Ensure layout settles before capture
+    document.body.appendChild(iframe)
+
+    // Wait for iframe to be ready
+    await new Promise<void>((resolve) => {
+      iframe.onload = () => resolve()
+      // Write the HTML content to the iframe
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+      if (iframeDoc) {
+        iframeDoc.open()
+        iframeDoc.write(html)
+        iframeDoc.close()
+        resolve()
+      }
+    })
+
+    // Wait for fonts to load inside the iframe
+    const iframeWindow = iframe.contentWindow
+    if (iframeWindow) {
+      await iframeWindow.document.fonts.ready
+    }
+
+    // Wait for layout to settle and images to load
     await new Promise((r) => requestAnimationFrame(() => r(null)))
+    await new Promise((r) => setTimeout(r, 200))
 
-    const canvas = await html2canvas(container, {
+    // Get the body element from the iframe for html2canvas
+    const iframeBody = iframe.contentDocument?.body
+    if (!iframeBody) {
+      document.body.removeChild(iframe)
+      throw new Error("Failed to access iframe content")
+    }
+
+    const canvas = await html2canvas(iframeBody, {
       scale: 2,
       backgroundColor: "#020617",
       useCORS: true,
+      width: 1122,
+      height: 794,
+      windowWidth: 1122,
+      windowHeight: 794,
     })
 
-    document.body.removeChild(container)
+    document.body.removeChild(iframe)
     canvasCacheRef.current = canvas
     return canvas
   }

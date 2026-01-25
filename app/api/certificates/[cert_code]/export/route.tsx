@@ -4,6 +4,15 @@ import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
 
+// Load Space Grotesk font for consistent rendering
+async function loadFont() {
+  const fontData = await fetch(
+    new URL('https://fonts.gstatic.com/s/spacegrotesk/v16/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUXskPMBBSSJLm2E.woff')
+  ).then((res) => res.arrayBuffer())
+
+  return fontData
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ cert_code: string }> }) {
   try {
     const { cert_code } = await params
@@ -31,6 +40,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (format === "png") {
+      const fontData = await loadFont()
+
       return new ImageResponse(
         <div
           style={{
@@ -39,6 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             height: "100%",
             backgroundColor: "#0a0a0a",
             padding: "80px",
+            fontFamily: "Space Grotesk",
           }}
         >
           <div
@@ -84,6 +96,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         {
           width: 1200,
           height: 800,
+          fonts: [
+            {
+              name: "Space Grotesk",
+              data: fontData,
+              style: "normal",
+              weight: 400,
+            },
+          ],
         },
       )
     }
