@@ -82,6 +82,24 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     generateQR()
   }, [certificate.cert_code])
 
+  useEffect(() => {
+    // Check for download query param
+    const params = new URLSearchParams(window.location.search)
+    const downloadAction = params.get("download")
+    
+    if (downloadAction === "pdf" && qrDataUrl && !downloading) {
+      handleDownloadPDF()
+      // Remove the param from URL without refreshing
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, "", newUrl)
+    } else if (downloadAction === "png" && qrDataUrl && !downloading) {
+      handleDownloadPNG()
+      // Remove the param from URL without refreshing
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, "", newUrl)
+    }
+  }, [qrDataUrl])
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     toast({
@@ -97,8 +115,13 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     if (canvasCacheRef.current) return canvasCacheRef.current
 
     // Preload fonts before rendering to ensure consistent typography
-    await preloadFonts()
+    try {
+      await preloadFonts()
+    } catch (e) {
+      console.warn("Font preloading failed, continuing anyway", e)
+    }
 
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
     const html = generateCertificateHTML({
       cert_code: certificate.cert_code,
       holder_name: certificate.holder_name,
@@ -107,61 +130,94 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       expires_at: null,
       signature_hash: certificate.signature_hash,
       qr_code_data_url: qrDataUrl,
-      logo_url: "/logo-full.png",
-      logo_symbol_url: "/logo-symbol.png",
-      signature_image_url: "/signature.png",
+      logo_url: `${baseUrl}/logo-full.png`,
+      logo_symbol_url: `${baseUrl}/logo-symbol.png`,
+      signature_image_url: `${baseUrl}/signature.png`,
     })
 
     // Use an iframe to isolate the certificate styles from the main page
     const iframe = document.createElement("iframe")
-    iframe.style.position = "fixed"
+    iframe.style.position = "absolute"
     iframe.style.left = "-9999px"
-    iframe.style.top = "0"
+    iframe.style.top = "-9999px"
     iframe.style.width = "1122px"
     iframe.style.height = "794px"
     iframe.style.border = "none"
-    iframe.style.visibility = "hidden"
+    iframe.style.opacity = "0"
+    iframe.style.pointerEvents = "none"
 
     document.body.appendChild(iframe)
 
-    // Wait for iframe to be ready
-    await new Promise<void>((resolve) => {
-      iframe.onload = () => resolve()
-      // Write the HTML content to the iframe
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-      if (iframeDoc) {
-        iframeDoc.open()
-        iframeDoc.write(html)
-        iframeDoc.close()
-        resolve()
-      }
-    })
-
-    // Wait for fonts to load inside the iframe
-    const iframeWindow = iframe.contentWindow
-    if (iframeWindow) {
-      await iframeWindow.document.fonts.ready
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!iframeDoc) {
+      document.body.removeChild(iframe)
+      throw new Error("Failed to access iframe content")
     }
 
-    // Wait for layout to settle and images to load
-    await new Promise((r) => requestAnimationFrame(() => r(null)))
-    await new Promise((r) => setTimeout(r, 200))
+    // Write the HTML content to the iframe and wait for it to load
+    await new Promise<void>((resolve) => {
+      let resolved = false
+      const done = () => {
+        if (!resolved) {
+          resolved = true
+          resolve()
+        }
+      }
 
-    // Get the body element from the iframe for html2canvas
+      iframe.onload = done
+      iframeDoc.open()
+      iframeDoc.write(html)
+      iframeDoc.close()
+      
+      // Fallback: if onload doesn't fire (can happen with write())
+      setTimeout(done, 1500)
+    })
+
+    // Wait for fonts and images inside the iframe
+    const iframeWindow = iframe.contentWindow
+    if (iframeWindow) {
+      try {
+        // Wait for fonts to be ready in the iframe
+        if ((iframeWindow.document as any).fonts && (iframeWindow.document as any).fonts.ready) {
+          await (iframeWindow.document as any).fonts.ready
+        }
+      } catch (e) {
+        console.warn("Iframe font loading wait failed", e)
+      }
+
+      // Wait for all images to be loaded
+      const images = Array.from(iframeWindow.document.getElementsByTagName("img"))
+      await Promise.all(
+        images.map((img) => {
+          if (img.complete) return Promise.resolve()
+          return new Promise((res) => {
+            img.onload = res
+            img.onerror = res
+          })
+        })
+      )
+    }
+
+    // Extra wait for layout and final rendering
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    await new Promise((r) => setTimeout(r, 800))
+
     const iframeBody = iframe.contentDocument?.body
     if (!iframeBody) {
       document.body.removeChild(iframe)
-      throw new Error("Failed to access iframe content")
+      throw new Error("Failed to access iframe body after load")
     }
 
     const canvas = await html2canvas(iframeBody, {
       scale: 2,
       backgroundColor: "#020617",
       useCORS: true,
+      allowTaint: true,
       width: 1122,
       height: 794,
       windowWidth: 1122,
       windowHeight: 794,
+      logging: process.env.NODE_ENV !== "production",
     })
 
     document.body.removeChild(iframe)
@@ -204,9 +260,11 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       console.error(err)
       toast({
         title: "Error",
-        description: "Could not generate PDF.",
+        description: "Could not generate PDF. Please try again.",
         variant: "destructive",
       })
+      // Clear cache on error to allow retry
+      canvasCacheRef.current = null
     }
 
     setDownloading(null)
@@ -232,7 +290,14 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     try {
       const canvas = await renderCertificateCanvas()
       canvas.toBlob((blob) => {
-        if (!blob) return
+        if (!blob) {
+          toast({
+            title: "Download failed",
+            description: "Could not generate certificate image.",
+            variant: "destructive",
+          })
+          return
+        }
 
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
@@ -244,14 +309,16 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
         URL.revokeObjectURL(url)
 
         toast({ title: "Certificate ready", description: "PNG download started." })
-      })
+      }, "image/png", 1.0)
     } catch (err) {
       console.error(err)
       toast({
         title: "Error",
-        description: "Could not generate PNG.",
+        description: "Could not generate PNG. Please try again.",
         variant: "destructive",
       })
+      // Clear cache on error to allow retry
+      canvasCacheRef.current = null
     }
 
     setDownloading(null)

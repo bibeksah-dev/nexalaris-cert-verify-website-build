@@ -431,7 +431,7 @@ body {
           <div class="qr-block">
             <img src="${data.qr_code_data_url}" class="qr-img">
             <div class="qr-label">Scan to Verify</div>
-            <div class="qr-url">https://verify.nexalaris.com/c/${data.cert_code}</div>
+            <div class="qr-url">${data.qr_code_data_url ? `https://verifycert.nexalaris.com/c/${data.cert_code}` : ""}</div>
           </div>
 
           <!-- RIGHT: SIGNATURE -->

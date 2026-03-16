@@ -207,7 +207,7 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => window.open(`/api/certificates/${cert.cert_code}/export?format=pdf`, "_blank")}
+                      onClick={() => window.open(`/c/${cert.cert_code}?download=pdf`, "_blank")}
                       className="text-[#8E2DE2] hover:bg-[#8E2DE2]/10"
                     >
                       <Download className="h-4 w-4" />
