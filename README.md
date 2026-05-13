@@ -43,6 +43,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # Admin Authentication
 ADMIN_DEFAULT_PASSWORD=your_secure_password
+# The cron job uses SUPABASE_SERVICE_ROLE_KEY for authentication
 \`\`\`
 
 ## Installation
