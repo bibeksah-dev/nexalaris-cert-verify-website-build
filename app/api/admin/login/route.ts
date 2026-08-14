@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyAdminPassword, setAdminSession } from "@/lib/auth"
+import { getClientIp } from "@/lib/rate-limit"
 
 const SESSION_COOKIE = "nexalaris_admin_session"
 
@@ -73,15 +74,15 @@ export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
 
-    // Prefer the server-provided remote IP when available. Only fall back to
-    // X-Forwarded-For if the runtime/platform (trusted proxy) sets it.
-    const forwarded = request.headers.get("x-forwarded-for")
-    const ip = ((request as any).ip || (forwarded ? forwarded.toString().split(",")[0].trim() : "unknown")).toString()
+    // Key the limiter on a proxy-supplied IP the client cannot forge. Taking the
+    // first X-Forwarded-For entry would let an attacker rotate it per request
+    // and bypass the limit outright.
+    const ip = getClientIp(request)
 
     if (await isRateLimited(ip)) {
       return NextResponse.json({ error: "Too many attempts" }, { status: 429 })
     }
-    if (!password) {
+    if (!password || typeof password !== "string") {
       return NextResponse.json({ error: "Password is required" }, { status: 400 })
     }
 

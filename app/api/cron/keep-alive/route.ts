@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server"
+import crypto from "crypto"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
+
+function timingSafeMatch(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
 
 /**
  * Cron job handler to keep the Supabase database alive.
@@ -7,11 +15,14 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server"
  * Expected to be called every 2 days.
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization")
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  
-  // Verify the request is authorized via SUPABASE_SERVICE_ROLE_KEY
-  if (serviceKey && authHeader !== `Bearer ${serviceKey}`) {
+  const authHeader = request.headers.get("authorization") || ""
+
+  // Prefer a dedicated CRON_SECRET so the service role key is never sent as a
+  // request header; fall back to the service key for existing deployments.
+  const secret = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  // Fail closed: an unset secret must not mean "no authentication required".
+  if (!secret || !timingSafeMatch(authHeader, `Bearer ${secret}`)) {
     return new Response("Unauthorized", { status: 401 })
   }
 
