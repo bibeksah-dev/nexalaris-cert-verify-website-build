@@ -36,6 +36,27 @@ export function IssueForm({ programs }: IssueFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // The program Select is not a native required field, so guard it here
+    // instead of letting the API answer with a generic 400.
+    if (!formData.program_id) {
+      toast({
+        title: "Program required",
+        description: "Please select a program before issuing the certificate",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.expires_at && formData.expires_at < formData.issued_at) {
+      toast({
+        title: "Invalid expiry date",
+        description: "The expiry date cannot be before the issue date",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
 
     try {

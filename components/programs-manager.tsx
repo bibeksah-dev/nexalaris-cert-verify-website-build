@@ -290,6 +290,7 @@ export function ProgramsManager({ programs: initialPrograms }: ProgramsManagerPr
                       size="sm"
                       variant="ghost"
                       onClick={() => openEditDialog(program)}
+                      aria-label={`Edit program ${program.name}`}
                       className="text-[#12E8D5] hover:bg-[#12E8D5]/10"
                     >
                       <Edit className="h-4 w-4" />
@@ -301,6 +302,7 @@ export function ProgramsManager({ programs: initialPrograms }: ProgramsManagerPr
                         setDeletingProgramId(program.id)
                         setDeleteDialogOpen(true)
                       }}
+                      aria-label={`Delete program ${program.name}`}
                       className="text-[#FF4B4B] hover:bg-[#FF4B4B]/10"
                     >
                       <Trash2 className="h-4 w-4" />
