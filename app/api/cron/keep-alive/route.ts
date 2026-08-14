@@ -3,8 +3,8 @@ import crypto from "crypto"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 
 function timingSafeMatch(a: string, b: string): boolean {
-  const bufA = Buffer.from(a)
-  const bufB = Buffer.from(b)
+  const bufA = new TextEncoder().encode(a)
+  const bufB = new TextEncoder().encode(b)
   if (bufA.length !== bufB.length) return false
   return crypto.timingSafeEqual(bufA, bufB)
 }
