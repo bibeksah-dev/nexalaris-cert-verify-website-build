@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Eye, Download, Ban, Pencil } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
+import { adminFetch } from "@/lib/csrf-client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,10 +66,8 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
     if (!selectedCertCode) return
 
     try {
-      const response = await fetch(`/api/admin/certificates/${selectedCertCode}/revoke`, {
+      const response = await adminFetch(`/api/admin/certificates/${selectedCertCode}/revoke`, {
         method: "POST",
-        headers: { "x-csrf-token": getCsrfTokenFromCookie() || "" },
-        credentials: "include",
       })
 
       if (response.ok) {
@@ -111,13 +109,9 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
 
     setEditLoading(true)
     try {
-      const response = await fetch(`/api/admin/certificates/${selectedCertCode}`, {
+      const response = await adminFetch(`/api/admin/certificates/${selectedCertCode}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-csrf-token": getCsrfTokenFromCookie() || "",
-        },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ achievements_markdown: editAchievements }),
       })
 

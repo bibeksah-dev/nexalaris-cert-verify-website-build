@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
+import { adminFetch } from "@/lib/csrf-client"
 
 interface Program {
   id: string
@@ -60,10 +60,9 @@ export function IssueForm({ programs }: IssueFormProps) {
     setLoading(true)
 
     try {
-      const response = await fetch("/api/admin/certificates/issue", {
+      const response = await adminFetch("/api/admin/certificates/issue", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfTokenFromCookie() || "" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
 
