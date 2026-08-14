@@ -39,7 +39,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
       .from("certificates")
       .select("cert_code, holder_name, issued_at, status, programs(name)")
       .eq("cert_code", cert_code)
-      .single()
+      .single<{
+        cert_code: string
+        holder_name: string
+        issued_at: string
+        status: string
+        programs: { name: string } | null
+      }>()
 
     if (error || !certificate) {
       return new Response("Certificate not found", { status: 404 })
