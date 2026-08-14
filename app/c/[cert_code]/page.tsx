@@ -6,10 +6,8 @@ import Image from "next/image"
 import Link from "next/link"
 
 interface Certificate {
-  id: string
   cert_code: string
   holder_name: string
-  holder_email: string | null
   issued_at: string
   expires_at: string | null
   status: "VALID" | "EXPIRED" | "REVOKED"
@@ -29,11 +27,19 @@ export default async function CertificateDetailsPage({
   const { cert_code } = await params
   const supabase = await getSupabaseServerClient()
 
-  // Fetch certificate with program details
+  // Fetch certificate with program details. Select explicit columns rather than
+  // `*`: this page is public and everything fetched here is serialised into the
+  // payload sent to the browser, so holder_email must stay out of it.
   const { data: certificate, error } = await supabase
     .from("certificates")
     .select(`
-      *,
+      cert_code,
+      holder_name,
+      issued_at,
+      expires_at,
+      status,
+      achievements_markdown,
+      signature_hash,
       programs (
         name,
         slug

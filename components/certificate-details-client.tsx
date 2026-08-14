@@ -16,7 +16,6 @@ interface CertificateDetailsProps {
   certificate: {
     cert_code: string
     holder_name: string
-    holder_email: string | null
     issued_at: string
     expires_at: string | null
     status: "VALID" | "EXPIRED" | "REVOKED"
