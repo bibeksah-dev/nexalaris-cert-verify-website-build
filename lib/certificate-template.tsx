@@ -13,6 +13,8 @@ export interface CertificateData {
   logo_symbol_url?: string
   signature_image_url?: string
   issuer_name?: string
+  /** Full verification URL printed under the QR code. */
+  verify_url?: string
 }
 
 // The returned string is written into a document, so every interpolated value
@@ -42,6 +44,7 @@ export function generateCertificateHTML(data: CertificateData): string {
   const certCode = escapeHtml(data.cert_code)
   const logoUrl = escapeHtml(data.logo_url)
   const qrCodeDataUrl = escapeHtml(data.qr_code_data_url)
+  const verifyUrl = escapeHtml(data.verify_url || `https://verifycert.nexalaris.com/c/${data.cert_code}`)
 
   return `
 <!DOCTYPE html>
@@ -448,7 +451,7 @@ body {
           <div class="qr-block">
             <img src="${qrCodeDataUrl}" class="qr-img">
             <div class="qr-label">Scan to Verify</div>
-            <div class="qr-url">${qrCodeDataUrl ? `https://verifycert.nexalaris.com/c/${certCode}` : ""}</div>
+            <div class="qr-url">${qrCodeDataUrl ? verifyUrl : ""}</div>
           </div>
 
           <!-- RIGHT: SIGNATURE -->

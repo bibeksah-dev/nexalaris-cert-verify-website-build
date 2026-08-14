@@ -130,6 +130,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       logo_url: `${baseUrl}/logo-full.png`,
       logo_symbol_url: `${baseUrl}/logo-symbol.png`,
       signature_image_url: `${baseUrl}/signature.png`,
+      verify_url: `${baseUrl}/c/${certificate.cert_code}`,
     })
 
     // Use an iframe to isolate the certificate styles from the main page
@@ -336,6 +337,18 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     [certificate.issued_at],
   )
 
+  const formattedExpiresAt = useMemo(
+    () =>
+      certificate.expires_at
+        ? new Date(certificate.expires_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : null,
+    [certificate.expires_at],
+  )
+
   // ------------------------------------------------------
   //          UI RENDERING (unchanged from your design)
   // ------------------------------------------------------
@@ -390,6 +403,14 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
                 <h3 className="text-xs text-[#F3F7FA]/70">Issued At</h3>
                 <p className="text-sm text-[#F3F7FA]">{formattedIssuedAt}</p>
               </div>
+              {formattedExpiresAt && (
+                <div>
+                  <h3 className="text-xs text-[#F3F7FA]/70">
+                    {certificate.status === "EXPIRED" ? "Expired On" : "Valid Until"}
+                  </h3>
+                  <p className="text-sm text-[#F3F7FA]">{formattedExpiresAt}</p>
+                </div>
+              )}
             </div>
 
             <div>
