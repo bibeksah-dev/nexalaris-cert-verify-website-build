@@ -1,40 +1,36 @@
 Migration instructions
 ----------------------
 
-This project uses a simple Postgres migration to create `admin_sessions` (server-side sessions)
-and `admin_auth` (admin password storage) tables. Run the SQL file below against your database.
+> **Note:** this README previously pointed at
+> `scripts/migrations/001_create_admin_sessions.sql`, but that file was never
+> checked into the repository. The migration that created `admin_sessions`
+> and `admin_auth` was applied directly in the Supabase SQL editor and is
+> unversioned. The schema below is reconstructed from what the application
+> code (`lib/auth.ts`) reads and writes; verify it against the live database
+> before reusing it.
 
-File: `scripts/migrations/001_create_admin_sessions.sql`
+The app expects two tables:
 
-How to apply (Supabase/Postgres):
+- `admin_sessions` — server-side session tokens. Columns used by the code:
+  `token` (text, unique), `created_at` (timestamptz), `expires_at` (timestamptz).
+- `admin_auth` — single-row admin password storage. Columns used by the code:
+  `password_hash` (text), `updated_at` (timestamptz).
 
-Using `psql`:
+Both tables are only ever accessed through the service-role client, so RLS
+should be enabled with no anonymous policies.
 
-```powershell
-# On Windows PowerShell - replace placeholders with your values
-psql "postgresql://<db_user>:<db_password>@<db_host>:<db_port>/<db_name>" -f scripts/migrations/001_create_admin_sessions.sql
-```
+Creating an initial admin account
+---------------------------------
 
-Using the Supabase CLI:
+Insert a hashed password using a secure workflow (do not insert plaintext).
 
-```powershell
-# If you have supabase CLI configured
-supabase db remote set <DATABASE_URL>
-supabase db query < scripts/migrations/001_create_admin_sessions.sql
-```
-
-After running migrations:
-- Confirm `admin_sessions` and `admin_auth` tables exist.
-- If you already have an `admin_auth` row, it will remain unchanged.
-- If you need to create an initial admin account, insert a hashed password using a secure workflow (do not insert plaintext).
-
-Example: generate bcrypt hash with Node REPL
+Generate a bcrypt hash with the Node REPL:
 
 ```powershell
 node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('<your-password>', 10).then(h => console.log(h))"
 ```
 
-Then insert into DB (psql):
+Then insert it (Supabase SQL editor or psql):
 
 ```sql
 INSERT INTO admin_auth (password_hash) VALUES ('<bcrypt-hash>');
