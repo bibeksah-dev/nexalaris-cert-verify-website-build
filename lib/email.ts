@@ -1,4 +1,5 @@
 import { Resend } from "resend"
+import { escapeHtml } from "./certificate-template"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -40,6 +41,12 @@ export async function sendCertificateIssuedEmail({
   const siteUrl = getSiteUrl()
   const verificationUrl = `${siteUrl}/c/${cert_code}`
 
+  // The email body is HTML: escape every interpolated field so a holder name
+  // like `<img onerror=...>` cannot inject markup into the message.
+  const safeHolderName = escapeHtml(holder_name)
+  const safeProgramName = escapeHtml(program_name)
+  const safeCertCode = escapeHtml(cert_code)
+
   console.log(`Generating email with verification URL: ${verificationUrl}`)
 
   try {
@@ -72,7 +79,7 @@ export async function sendCertificateIssuedEmail({
           <tr>
             <td style="padding: 40px;">
               <h2 style="margin: 0 0 20px; color: #F3F7FA; font-size: 24px; font-weight: 600;">
-                Congratulations, ${holder_name}!
+                Congratulations, ${safeHolderName}!
               </h2>
 
               <p style="margin: 0 0 25px; color: #94A3B8; font-size: 16px; line-height: 1.6;">
@@ -80,14 +87,14 @@ export async function sendCertificateIssuedEmail({
               </p>
 
               <p style="margin: 0 0 30px; color: #FF8A00; font-size: 20px; font-weight: 600;">
-                ${program_name}
+                ${safeProgramName}
               </p>
 
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 30px; background-color: #1E293B; border-radius: 8px;">
                 <tr>
                   <td style="padding: 20px;">
                     <p style="margin: 0 0 5px; color: #94A3B8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Certificate ID</p>
-                    <p style="margin: 0; color: #12E8D5; font-size: 18px; font-family: monospace; font-weight: 600;">${cert_code}</p>
+                    <p style="margin: 0; color: #12E8D5; font-size: 18px; font-family: monospace; font-weight: 600;">${safeCertCode}</p>
                   </td>
                 </tr>
               </table>

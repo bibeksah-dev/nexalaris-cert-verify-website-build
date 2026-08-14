@@ -18,7 +18,7 @@ export interface CertificateData {
 // The returned string is written into a document, so every interpolated value
 // must be escaped or a certificate field (e.g. holder_name) becomes an HTML
 // injection point.
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
