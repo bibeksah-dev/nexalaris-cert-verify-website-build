@@ -6,18 +6,12 @@ import Link from "next/link"
 export default async function AdminDashboardPage() {
   const supabase = await getSupabaseServerClient()
 
-  // Fetch stats
-  const { count: totalCerts } = await supabase.from("certificates").select("*", { count: "exact", head: true })
-
-  const { count: validCerts } = await supabase
-    .from("certificates")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "VALID")
-
-  const { count: revokedCerts } = await supabase
-    .from("certificates")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "REVOKED")
+  // Fetch stats in parallel: the three counts are independent queries.
+  const [{ count: totalCerts }, { count: validCerts }, { count: revokedCerts }] = await Promise.all([
+    supabase.from("certificates").select("*", { count: "exact", head: true }),
+    supabase.from("certificates").select("*", { count: "exact", head: true }).eq("status", "VALID"),
+    supabase.from("certificates").select("*", { count: "exact", head: true }).eq("status", "REVOKED"),
+  ])
 
   const stats = [
     {

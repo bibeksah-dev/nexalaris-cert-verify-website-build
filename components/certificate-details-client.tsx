@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Download, Copy, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import QRCode from "qrcode"
-import jsPDF from "jspdf"
-import html2canvas from "html2canvas"
 import ReactMarkdown from "react-markdown"
 
 import { generateCertificateHTML } from "@/lib/certificate-template" // your new template
@@ -207,6 +205,9 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       throw new Error("Failed to access iframe body after load")
     }
 
+    // html2canvas is heavy (~200KB gzipped) and only needed on download, so it
+    // is loaded on demand rather than shipped with the page bundle.
+    const { default: html2canvas } = await import("html2canvas")
     const canvas = await html2canvas(iframeBody, {
       scale: 2,
       backgroundColor: "#020617",
@@ -243,6 +244,8 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
 
     try {
       const canvas = await renderCertificateCanvas()
+      // Loaded on demand for the same reason as html2canvas above.
+      const { default: jsPDF } = await import("jspdf")
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
