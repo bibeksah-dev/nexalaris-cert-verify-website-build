@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr"
+import { DB_SCHEMA } from "./schema"
 
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
@@ -14,7 +15,7 @@ export function getSupabaseBrowserClient() {
     return supabaseClient
   }
 
-  supabaseClient = createBrowserClient(url, key)
+  supabaseClient = createBrowserClient(url, key, { db: { schema: DB_SCHEMA } })
 
   return supabaseClient
 }

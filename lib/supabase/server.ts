@@ -1,6 +1,7 @@
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
+import { DB_SCHEMA } from "./schema"
 
 // Safety check: ensure service role key isn't accidentally exposed as a public env var.
 if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -24,6 +25,7 @@ export async function getSupabaseServerClient() {
   const cookieStore = await cookies()
 
   return createSupabaseServerClient(url, key, {
+    db: { schema: DB_SCHEMA },
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -52,6 +54,7 @@ export function getSupabaseAdminClient() {
   }
 
   return createClient(url, key, {
+    db: { schema: DB_SCHEMA },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
