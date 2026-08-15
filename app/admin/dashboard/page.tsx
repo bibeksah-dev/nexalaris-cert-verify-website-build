@@ -1,23 +1,24 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { AdminLayout } from "@/components/admin-layout"
 import { FileText, List, FolderOpen, Award, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 
+// The service-role client does not touch cookies(), so without this Next would
+// prerender these counts at build time and serve them stale forever.
+export const dynamic = "force-dynamic"
+
 export default async function AdminDashboardPage() {
-  const supabase = await getSupabaseServerClient()
+  // Service-role, not anon: `certificates` is now RLS-protected and the anon role
+  // holds a column-scoped SELECT only, so `select("*")` is refused for it.
+  // This page is behind the /admin middleware guard.
+  const supabase = getSupabaseAdminClient()
 
-  // Fetch stats
-  const { count: totalCerts } = await supabase.from("certificates").select("*", { count: "exact", head: true })
-
-  const { count: validCerts } = await supabase
-    .from("certificates")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "VALID")
-
-  const { count: revokedCerts } = await supabase
-    .from("certificates")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "REVOKED")
+  // Fetch stats in parallel: the three counts are independent queries.
+  const [{ count: totalCerts }, { count: validCerts }, { count: revokedCerts }] = await Promise.all([
+    supabase.from("certificates").select("*", { count: "exact", head: true }),
+    supabase.from("certificates").select("*", { count: "exact", head: true }).eq("status", "VALID"),
+    supabase.from("certificates").select("*", { count: "exact", head: true }).eq("status", "REVOKED"),
+  ])
 
   const stats = [
     {

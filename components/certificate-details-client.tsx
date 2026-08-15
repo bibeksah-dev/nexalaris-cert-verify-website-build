@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Download, Copy, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import QRCode from "qrcode"
-import jsPDF from "jspdf"
-import html2canvas from "html2canvas"
 import ReactMarkdown from "react-markdown"
 
 import { generateCertificateHTML } from "@/lib/certificate-template" // your new template
@@ -16,7 +14,6 @@ interface CertificateDetailsProps {
   certificate: {
     cert_code: string
     holder_name: string
-    holder_email: string | null
     issued_at: string
     expires_at: string | null
     status: "VALID" | "EXPIRED" | "REVOKED"
@@ -133,6 +130,7 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       logo_url: `${baseUrl}/logo-full.png`,
       logo_symbol_url: `${baseUrl}/logo-symbol.png`,
       signature_image_url: `${baseUrl}/signature.png`,
+      verify_url: `${baseUrl}/c/${certificate.cert_code}`,
     })
 
     // Use an iframe to isolate the certificate styles from the main page
@@ -208,6 +206,9 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
       throw new Error("Failed to access iframe body after load")
     }
 
+    // html2canvas is heavy (~200KB gzipped) and only needed on download, so it
+    // is loaded on demand rather than shipped with the page bundle.
+    const { default: html2canvas } = await import("html2canvas")
     const canvas = await html2canvas(iframeBody, {
       scale: 2,
       backgroundColor: "#020617",
@@ -244,6 +245,8 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
 
     try {
       const canvas = await renderCertificateCanvas()
+      // Loaded on demand for the same reason as html2canvas above.
+      const { default: jsPDF } = await import("jspdf")
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
@@ -334,6 +337,18 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
     [certificate.issued_at],
   )
 
+  const formattedExpiresAt = useMemo(
+    () =>
+      certificate.expires_at
+        ? new Date(certificate.expires_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : null,
+    [certificate.expires_at],
+  )
+
   // ------------------------------------------------------
   //          UI RENDERING (unchanged from your design)
   // ------------------------------------------------------
@@ -388,6 +403,14 @@ export function CertificateDetailsClient({ certificate }: CertificateDetailsProp
                 <h3 className="text-xs text-[#F3F7FA]/70">Issued At</h3>
                 <p className="text-sm text-[#F3F7FA]">{formattedIssuedAt}</p>
               </div>
+              {formattedExpiresAt && (
+                <div>
+                  <h3 className="text-xs text-[#F3F7FA]/70">
+                    {certificate.status === "EXPIRED" ? "Expired On" : "Valid Until"}
+                  </h3>
+                  <p className="text-sm text-[#F3F7FA]">{formattedExpiresAt}</p>
+                </div>
+              )}
             </div>
 
             <div>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
+import { adminFetch } from "@/lib/csrf-client"
 
 export default function AdminSettingsPage() {
   const [formData, setFormData] = useState({
@@ -24,10 +24,9 @@ export default function AdminSettingsPage() {
     setLoading(true)
 
     try {
-      const response = await fetch("/api/admin/change-password", {
+      const response = await adminFetch("/api/admin/change-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfTokenFromCookie() || "" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
 

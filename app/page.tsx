@@ -72,6 +72,9 @@ export default function HomePage() {
                   <Input
                     type="text"
                     placeholder="Enter Certificate ID (e.g., VC-2024-ABC123)"
+                    aria-label="Certificate ID"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "cert-code-error" : undefined}
                     value={certCode}
                     onChange={(e) => {
                       setCertCode(e.target.value)
@@ -79,7 +82,11 @@ export default function HomePage() {
                     }}
                     className="h-12 rounded-xl border-white/20 bg-white/10 px-4 text-base text-[#F3F7FA] placeholder:text-[#F3F7FA]/40 focus:border-[#12E8D5] focus:ring-[#12E8D5] sm:h-14 sm:px-6 sm:text-lg"
                   />
-                  {error && <p className="mt-2 text-left text-sm text-red-400">{error}</p>}
+                  {error && (
+                    <p id="cert-code-error" role="alert" className="mt-2 text-left text-sm text-red-400">
+                      {error}
+                    </p>
+                  )}
                 </div>
 
                 <Button

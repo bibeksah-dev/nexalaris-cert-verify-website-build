@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Eye, Download, Ban, Pencil } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
+import { adminFetch } from "@/lib/csrf-client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,10 +66,8 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
     if (!selectedCertCode) return
 
     try {
-      const response = await fetch(`/api/admin/certificates/${selectedCertCode}/revoke`, {
+      const response = await adminFetch(`/api/admin/certificates/${selectedCertCode}/revoke`, {
         method: "POST",
-        headers: { "x-csrf-token": getCsrfTokenFromCookie() || "" },
-        credentials: "include",
       })
 
       if (response.ok) {
@@ -111,13 +109,9 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
 
     setEditLoading(true)
     try {
-      const response = await fetch(`/api/admin/certificates/${selectedCertCode}`, {
+      const response = await adminFetch(`/api/admin/certificates/${selectedCertCode}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-csrf-token": getCsrfTokenFromCookie() || "",
-        },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ achievements_markdown: editAchievements }),
       })
 
@@ -192,6 +186,7 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
                       size="sm"
                       variant="ghost"
                       onClick={() => router.push(`/c/${cert.cert_code}`)}
+                      aria-label={`View certificate ${cert.cert_code}`}
                       className="text-[#12E8D5] hover:bg-[#12E8D5]/10"
                     >
                       <Eye className="h-4 w-4" />
@@ -200,6 +195,7 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
                       size="sm"
                       variant="ghost"
                       onClick={() => handleEditOpen(cert)}
+                      aria-label={`Edit achievements for ${cert.cert_code}`}
                       className="text-[#FF8A00] hover:bg-[#FF8A00]/10"
                     >
                       <Pencil className="h-4 w-4" />
@@ -208,6 +204,7 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
                       size="sm"
                       variant="ghost"
                       onClick={() => window.open(`/c/${cert.cert_code}?download=pdf`, "_blank")}
+                      aria-label={`Download PDF for ${cert.cert_code}`}
                       className="text-[#8E2DE2] hover:bg-[#8E2DE2]/10"
                     >
                       <Download className="h-4 w-4" />
@@ -220,6 +217,7 @@ export function CertificateTable({ certificates: initialCerts }: CertificateTabl
                           setSelectedCertCode(cert.cert_code)
                           setRevokeDialogOpen(true)
                         }}
+                        aria-label={`Revoke certificate ${cert.cert_code}`}
                         className="text-[#FF4B4B] hover:bg-[#FF4B4B]/10"
                       >
                         <Ban className="h-4 w-4" />

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { getCsrfTokenFromCookie } from "@/lib/csrf-client"
+import { adminFetch } from "@/lib/csrf-client"
 
 interface Program {
   id: string
@@ -36,13 +36,33 @@ export function IssueForm({ programs }: IssueFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // The program Select is not a native required field, so guard it here
+    // instead of letting the API answer with a generic 400.
+    if (!formData.program_id) {
+      toast({
+        title: "Program required",
+        description: "Please select a program before issuing the certificate",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.expires_at && formData.expires_at < formData.issued_at) {
+      toast({
+        title: "Invalid expiry date",
+        description: "The expiry date cannot be before the issue date",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
-      const response = await fetch("/api/admin/certificates/issue", {
+      const response = await adminFetch("/api/admin/certificates/issue", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfTokenFromCookie() || "" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
 

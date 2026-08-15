@@ -4,10 +4,19 @@ import { verifyAdminRequest } from "@/lib/auth"
 import { sendCertificateIssuedEmail } from "@/lib/email"
 import crypto from "crypto"
 
+// 5 random bytes = 40 bits of entropy. The previous 3 bytes (24 bits) left only
+// ~16M codes per year prefix, which is enumerable against an unmetered
+// verification endpoint. Existing shorter codes remain valid.
 function generateCertCode(): string {
   const year = new Date().getFullYear()
-  const random = crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 6)
+  const random = crypto.randomBytes(5).toString("hex").toUpperCase()
   return `VC-${year}-${random}`
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function isNonEmptyString(value: unknown, maxLength: number): value is string {
+  return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength
 }
 
 export async function POST(request: NextRequest) {
@@ -19,8 +28,29 @@ export async function POST(request: NextRequest) {
 
     const { holder_name, holder_email, program_id, issued_at, expires_at, achievements_markdown } = await request.json()
 
-    if (!holder_name || !program_id || !issued_at || !achievements_markdown) {
+    if (
+      !isNonEmptyString(holder_name, 200) ||
+      !isNonEmptyString(program_id, 100) ||
+      !isNonEmptyString(issued_at, 100) ||
+      !isNonEmptyString(achievements_markdown, 20000)
+    ) {
       return NextResponse.json({ error: "Required fields are missing" }, { status: 400 })
+    }
+
+    if (Number.isNaN(new Date(issued_at).getTime())) {
+      return NextResponse.json({ error: "Invalid issued_at date" }, { status: 400 })
+    }
+
+    if (expires_at !== undefined && expires_at !== null && expires_at !== "") {
+      if (typeof expires_at !== "string" || Number.isNaN(new Date(expires_at).getTime())) {
+        return NextResponse.json({ error: "Invalid expires_at date" }, { status: 400 })
+      }
+    }
+
+    if (holder_email !== undefined && holder_email !== null && holder_email !== "") {
+      if (typeof holder_email !== "string" || holder_email.length > 254 || !EMAIL_PATTERN.test(holder_email)) {
+        return NextResponse.json({ error: "Invalid holder_email" }, { status: 400 })
+      }
     }
 
     const supabase = getSupabaseAdminClient()

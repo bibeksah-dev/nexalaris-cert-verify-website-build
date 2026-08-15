@@ -13,6 +13,20 @@ export interface CertificateData {
   logo_symbol_url?: string
   signature_image_url?: string
   issuer_name?: string
+  /** Full verification URL printed under the QR code. */
+  verify_url?: string
+}
+
+// The returned string is written into a document, so every interpolated value
+// must be escaped or a certificate field (e.g. holder_name) becomes an HTML
+// injection point.
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
 }
 
 export function generateCertificateHTML(data: CertificateData): string {
@@ -22,9 +36,15 @@ export function generateCertificateHTML(data: CertificateData): string {
     day: "numeric",
   })
 
-  const issuerName = data.issuer_name || "Nexalaris Tech Private Limited"
-  const symbolLogoUrl = data.logo_symbol_url || data.logo_url
-  const signatureImageUrl = data.signature_image_url || "/signature.png"
+  const issuerName = escapeHtml(data.issuer_name || "Nexalaris Tech Private Limited")
+  const symbolLogoUrl = escapeHtml(data.logo_symbol_url || data.logo_url)
+  const signatureImageUrl = escapeHtml(data.signature_image_url || "/signature.png")
+  const holderName = escapeHtml(data.holder_name)
+  const programName = escapeHtml(data.program_name)
+  const certCode = escapeHtml(data.cert_code)
+  const logoUrl = escapeHtml(data.logo_url)
+  const qrCodeDataUrl = escapeHtml(data.qr_code_data_url)
+  const verifyUrl = escapeHtml(data.verify_url || `https://verifycert.nexalaris.com/c/${data.cert_code}`)
 
   return `
 <!DOCTYPE html>
@@ -394,7 +414,7 @@ body {
         </div>
 
         <div class="header">
-          <img src="${data.logo_url}" class="header-logo">
+          <img src="${logoUrl}" class="header-logo">
           <div class="title-bar">
             <div class="title-bar-inner">
               <div class="title-text">CERTIFICATE OF COMPLETION</div>
@@ -405,13 +425,13 @@ body {
         <div class="content">
           <div class="eyebrow">THIS CERTIFIES THAT</div>
 
-          <div class="holder-name">${data.holder_name}</div>
+          <div class="holder-name">${holderName}</div>
 
           <div class="subtitle">has successfully completed</div>
 
           <div class="program-bar">
             <div class="program-bar-inner">
-              <div class="program-text">${data.program_name}</div>
+              <div class="program-text">${programName}</div>
             </div>
           </div>
         </div>
@@ -424,14 +444,14 @@ body {
             <div class="cert-id" style="margin-top: 8px;">Issued On</div>
             <div class="footer-value">${formattedIssueDate}</div>
             <div class="cert-id">Certificate ID</div>
-            <div class="cert-id-value">${data.cert_code}</div>
+            <div class="cert-id-value">${certCode}</div>
           </div>
 
           <!-- CENTER: QR -->
           <div class="qr-block">
-            <img src="${data.qr_code_data_url}" class="qr-img">
+            <img src="${qrCodeDataUrl}" class="qr-img">
             <div class="qr-label">Scan to Verify</div>
-            <div class="qr-url">${data.qr_code_data_url ? `https://verifycert.nexalaris.com/c/${data.cert_code}` : ""}</div>
+            <div class="qr-url">${qrCodeDataUrl ? verifyUrl : ""}</div>
           </div>
 
           <!-- RIGHT: SIGNATURE -->

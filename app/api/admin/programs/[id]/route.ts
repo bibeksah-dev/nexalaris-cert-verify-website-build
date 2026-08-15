@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { verifyAdminRequest } from "@/lib/auth"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +16,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Name, slug, and description are required" }, { status: 400 })
     }
 
-    const supabase = await getSupabaseServerClient()
+    // Privileged write: go through the service-role client rather than relying
+    // on RLS to permit anonymous writes to `programs`.
+    const supabase = getSupabaseAdminClient()
 
     const { data, error } = await supabase
       .from("programs")
@@ -53,7 +55,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { id } = await params
-    const supabase = await getSupabaseServerClient()
+    const supabase = getSupabaseAdminClient()
 
     const { error } = await supabase.from("programs").delete().eq("id", id)
 

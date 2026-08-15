@@ -1,8 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { ImageResponse } from "next/og"
+import { getClientIp, isRateLimited } from "@/lib/rate-limit"
 
 export const runtime = "edge"
+
+// Same brute-force cap and code shape as /api/certificates/public: this route
+// also answers "does this certificate exist?" to anonymous callers.
+const WINDOW_MS = 60 * 1000
+const MAX_LOOKUPS = 30
+const CERT_CODE_PATTERN = /^VC-\d{4}-[A-Za-z0-9]{4,32}$/
 
 // Load Space Grotesk font for consistent rendering
 async function loadFont() {
@@ -23,13 +30,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Only PNG and PDF formats are supported" }, { status: 400 })
     }
 
+    if (!CERT_CODE_PATTERN.test(cert_code)) {
+      return NextResponse.json({ error: "Certificate not found" }, { status: 404 })
+    }
+
+    if (isRateLimited(`cert-export:${getClientIp(request)}`, MAX_LOOKUPS, WINDOW_MS)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    }
+
     const supabase = await createServerClient()
 
+    // Only the fields the image needs; never fetch holder_email on an
+    // unauthenticated route.
     const { data: certificate, error } = await supabase
       .from("certificates")
-      .select("*, programs(name)")
+      .select("cert_code, holder_name, issued_at, status, programs(name)")
       .eq("cert_code", cert_code)
-      .single()
+      .single<{
+        cert_code: string
+        holder_name: string
+        issued_at: string
+        status: string
+        programs: { name: string } | null
+      }>()
 
     if (error || !certificate) {
       return NextResponse.json({ error: "Certificate not found" }, { status: 404 })
