@@ -1,9 +1,16 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { AdminLayout } from "@/components/admin-layout"
 import { CertificateTable } from "@/components/certificate-table"
 
+// The service-role client does not touch cookies(), so without this Next would
+// prerender the certificate list at build time and bake holder data into a
+// static file that never refreshes.
+export const dynamic = "force-dynamic"
+
 export default async function ManageCertificatesPage() {
-  const supabase = await getSupabaseServerClient()
+  // Service-role, not anon: this selects `*` (holder_email included, which the
+  // table needs) and anon is no longer granted those columns.
+  const supabase = getSupabaseAdminClient()
 
   const { data: certificates } = await supabase
     .from("certificates")
