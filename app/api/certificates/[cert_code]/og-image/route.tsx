@@ -1,6 +1,7 @@
 import { ImageResponse } from "@vercel/og"
 import { createServerClient } from "@/lib/supabase/server"
 import { getClientIp, isRateLimited } from "@/lib/rate-limit"
+import { loadCertificateFonts } from "@/lib/og-font"
 
 export const runtime = "edge"
 
@@ -9,15 +10,6 @@ export const runtime = "edge"
 const WINDOW_MS = 60 * 1000
 const MAX_LOOKUPS = 30
 const CERT_CODE_PATTERN = /^VC-\d{4}-[A-Za-z0-9]{4,32}$/
-
-// Load Space Grotesk font for consistent rendering
-async function loadFont() {
-  const fontData = await fetch(
-    new URL('https://fonts.gstatic.com/s/spacegrotesk/v16/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUXskPMBBSSJLm2E.woff')
-  ).then((res) => res.arrayBuffer())
-
-  return fontData
-}
 
 export async function GET(request: Request, { params }: { params: Promise<{ cert_code: string }> }) {
   try {
@@ -66,7 +58,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
       tealTransparent: "rgba(18, 232, 213, 0.3)",
     }
 
-    const fontData = await loadFont()
+    const fonts = await loadCertificateFonts()
 
     return new ImageResponse(
       <div
@@ -176,14 +168,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ cert
       {
         width: 1200,
         height: 800,
-        fonts: [
-          {
-            name: "Space Grotesk",
-            data: fontData,
-            style: "normal",
-            weight: 400,
-          },
-        ],
+        fonts,
       },
     )
   } catch (error) {
